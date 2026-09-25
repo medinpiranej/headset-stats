@@ -4,6 +4,6 @@ public static class SupportedHeadsets
 {
     public static IReadOnlyList<IHeadsetProtocol> All { get; } =
     [
-        new SonyWirelessAdapterProtocol(),
+        new Pulse3DProtocol(),
     ];
 }

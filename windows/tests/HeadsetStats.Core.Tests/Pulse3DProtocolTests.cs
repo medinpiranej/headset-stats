@@ -2,9 +2,9 @@ using HeadsetStats.Core.Devices;
 
 namespace HeadsetStats.Core.Tests;
 
-public class SonyWirelessAdapterProtocolTests
+public class Pulse3DProtocolTests
 {
-    private readonly SonyWirelessAdapterProtocol _protocol = new();
+    private readonly Pulse3DProtocol _protocol = new();
 
     [Fact]
     public void Parses_battery_from_captured_status_report()
