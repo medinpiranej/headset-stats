@@ -45,7 +45,12 @@ Double-click the tray icon to open it.
   buttons do on the PC: nothing extra, open a shortcut/app/file/website (pick from the Start menu or
   Desktop), or run a command. Use **Test now** to try it. The headset still changes its balance too.
 - **Supported devices**: supported headsets, and what to expect from each.
+- **Supported devices**: also the switch for trying headsets that aren't supported yet (experimental).
 - **About**: how the information is gathered, what to expect, privacy and trademarks.
+
+Every value can be selected and copied: click a row and press **Ctrl+C**, or right-click → **Copy /
+Copy value / Copy all**. At the bottom, **Copy device logs** copies a full report for bug reports, and
+**Report a device on GitHub…** copies it and opens a ready-made issue.
 
 ## Troubleshooting
 

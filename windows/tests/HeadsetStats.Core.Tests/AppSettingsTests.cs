@@ -2,14 +2,14 @@ using HeadsetStats.Core.Devices;
 
 namespace HeadsetStats.Core.Tests;
 
-public sealed class ButtonActionSettingsTests : IDisposable
+public sealed class AppSettingsTests : IDisposable
 {
     private readonly string _path = Path.Combine(Path.GetTempPath(), $"headset-stats-{Guid.NewGuid():N}", "settings.json");
 
     [Fact]
     public void Defaults_to_nothing()
     {
-        var settings = new ButtonActionSettings(_path);
+        var settings = new AppSettings(_path);
 
         Assert.Equal(ButtonAction.Nothing, settings.Get(HeadsetButton.Chat));
         Assert.False(settings.Get(HeadsetButton.Game).IsConfigured);
@@ -20,14 +20,24 @@ public sealed class ButtonActionSettingsTests : IDisposable
     {
         var shortcut = new ButtonAction(ButtonActionKind.Open, @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Discord.lnk");
         var command = new ButtonAction(ButtonActionKind.Command, "start spotify:");
-        var first = new ButtonActionSettings(_path);
+        var first = new AppSettings(_path);
         first.Set(HeadsetButton.Chat, shortcut);
         first.Set(HeadsetButton.Game, command);
 
-        var second = new ButtonActionSettings(_path);
+        var second = new AppSettings(_path);
 
         Assert.Equal(shortcut, second.Get(HeadsetButton.Chat));
         Assert.Equal(command, second.Get(HeadsetButton.Game));
+    }
+
+    [Fact]
+    public void Trying_unsupported_devices_is_on_by_default_and_persists()
+    {
+        Assert.True(new AppSettings(_path).TryUnsupportedDevices);
+
+        new AppSettings(_path).TryUnsupportedDevices = false;
+
+        Assert.False(new AppSettings(_path).TryUnsupportedDevices);
     }
 
     [Fact]
@@ -42,13 +52,13 @@ public sealed class ButtonActionSettingsTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         File.WriteAllText(_path, "{ not json");
 
-        Assert.Equal(ButtonAction.Nothing, new ButtonActionSettings(_path).Get(HeadsetButton.Chat));
+        Assert.Equal(ButtonAction.Nothing, new AppSettings(_path).Get(HeadsetButton.Chat));
     }
 
     [Fact]
     public void Only_chat_and_game_are_assignable()
     {
-        Assert.Equal([HeadsetButton.Chat, HeadsetButton.Game], ButtonActionSettings.Assignable);
+        Assert.Equal([HeadsetButton.Chat, HeadsetButton.Game], AppSettings.Assignable);
     }
 
     [Theory]

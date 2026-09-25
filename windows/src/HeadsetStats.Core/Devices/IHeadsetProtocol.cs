@@ -10,6 +10,9 @@ public interface IHeadsetProtocol
     ushort ProductId { get; }
     DeviceDescription Description { get; }
 
+    /// <summary>False for devices tried experimentally (see <see cref="ExperimentalProtocol"/>).</summary>
+    bool IsSupported => true;
+
     /// <summary>Whether this HID collection is the one that carries status reports.</summary>
     bool IsStatusCollection(HidDeviceInfo collection);
 

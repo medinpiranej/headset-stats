@@ -1,6 +1,6 @@
 ---
 name: New headset
-about: Help add support for a headset by sharing what its adapter sends
+about: Tried Headset Stats with a headset that isn't supported yet? Tell us how it went
 title: "Support for <headset name>"
 labels: new headset
 ---
@@ -9,22 +9,33 @@ labels: new headset
 **Adapter**: <!-- model number printed on the USB adapter, if any -->
 **Connection**: <!-- USB adapter / Bluetooth -->
 
-### Probe `list` output
+### Did it work?
 
-```
-<!-- dotnet run --project src/HeadsetStats.Probe -- list <VID> -->
-```
+<!-- Tick what applies. The app shows the device as "Not supported yet (experimental)". -->
 
-### Probe `listen` output
+- [ ] The app found the device
+- [ ] Battery level looked right (what did the console / other app show?)
+- [ ] Charging was shown correctly
+- [ ] On / off was shown correctly
+- [ ] Mic mute / volume / buttons were shown correctly
+- [ ] Nothing worked
 
-```
-<!-- dotnet run --project src/HeadsetStats.Probe -- listen <VID>:<PID> 600 -->
-```
+**What was wrong or missing?**
 
 ### What I did, and when
 
-| Time in the log | Action | Battery on the console, if known |
+| Time | Action | Battery on the console, if known |
 |---|---|---|
 | 00:20 | switched off | |
 | 00:35 | switched on | |
 | 01:40 | plugged in the charging cable | |
+
+### Device logs
+
+<!-- In Headset Stats: "Copy device logs" (bottom of the window or tray menu), then paste here. -->
+
+<details><summary>Device logs</summary>
+
+PASTE HERE
+
+</details>

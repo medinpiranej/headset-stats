@@ -13,19 +13,23 @@ internal enum DeviceWindowTab { Device, History, Buttons, SupportedDevices, Abou
 internal sealed class DeviceWindow : Form
 {
     private const string RepositoryUrl = "https://github.com/medinpiranej/headset-stats";
+    private const string NewDeviceIssueUrl = RepositoryUrl + "/issues/new?template=new-headset.md";
 
     private readonly HeadsetMonitor _monitor;
     private readonly StatusStore _store;
+    private readonly AppSettings _settings;
+    private readonly Label _copyResult = new() { AutoSize = true, ForeColor = SystemColors.GrayText, Anchor = AnchorStyles.Left };
     private readonly ButtonsPage _buttonsPage;
     private readonly ThemedTabs _tabs = new() { Dock = DockStyle.Fill };
     private readonly ListView _deviceList = CreateList(("Property", 170), ("Value", 420));
     private readonly ListView _historyList = CreateList(("Time", 70), ("Event", 150), ("Battery", 65), ("Charging", 70), ("Headset", 60), ("Mic", 55), ("Volume", 60), ("Raw report", 190));
 
-    public DeviceWindow(HeadsetMonitor monitor, StatusStore store, ButtonActionSettings buttonActions)
+    public DeviceWindow(HeadsetMonitor monitor, StatusStore store, AppSettings settings)
     {
         _monitor = monitor;
         _store = store;
-        _buttonsPage = new ButtonsPage(buttonActions, LogicalToDeviceUnits);
+        _settings = settings;
+        _buttonsPage = new ButtonsPage(settings, LogicalToDeviceUnits);
 
         Text = "Headset Stats";
         Icon = BatteryIcon.Create(TrayIconKind.App, null, 32);
@@ -38,17 +42,49 @@ internal sealed class DeviceWindow : Form
         _tabs.Add("Device", Page(_deviceList,
             "Live information about the connected headset. Values update when the headset reports a change."));
         _tabs.Add("History", Page(_historyList,
-            "Status reports received since the app started, newest first. The raw bytes are what the adapter sent."));
+            "Every message received since the app started, newest first, with the raw bytes the adapter sent. Select rows and press Ctrl+C to copy."));
         _tabs.Add("Buttons", _buttonsPage);
         _tabs.Add("Supported devices", SupportedDevicesPage());
         _tabs.Add("About", AboutPage());
         Controls.Add(_tabs);
+        Controls.Add(ActionBar());
 
         ScaleColumns(_deviceList);
         ScaleColumns(_historyList);
+        ListViewCopy.Attach(_deviceList, valueColumn: 1);
+        ListViewCopy.Attach(_historyList);
         _deviceList.Resize += (_, _) => FillLastColumn(_deviceList);
         _deviceList.VisibleChanged += (_, _) => FillLastColumn(_deviceList); // pages start hidden, so size is only final once shown
         RefreshData();
+    }
+
+    /// <summary>Bottom bar shown on every tab: copy a diagnostic report, or report a device on GitHub.</summary>
+    private FlowLayoutPanel ActionBar()
+    {
+        var bar = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Bottom,
+            AutoSize = true,
+            Padding = new Padding(LogicalToDeviceUnits(8), LogicalToDeviceUnits(4), LogicalToDeviceUnits(8), LogicalToDeviceUnits(6)),
+        };
+        var copy = new Button { Text = "Copy device logs", AutoSize = true };
+        copy.Click += (_, _) => CopyDeviceLogs();
+        var report = new Button { Text = "Report a device on GitHub…", AutoSize = true };
+        report.Click += (_, _) =>
+        {
+            CopyDeviceLogs();
+            Process.Start(new ProcessStartInfo(NewDeviceIssueUrl) { UseShellExecute = true });
+        };
+        bar.Controls.Add(copy);
+        bar.Controls.Add(report);
+        bar.Controls.Add(_copyResult);
+        return bar;
+    }
+
+    public void CopyDeviceLogs()
+    {
+        Clipboard.SetText(DiagnosticReport.Create(_monitor, Application.ProductVersion.Split('+')[0]));
+        _copyResult.Text = $"Device logs copied at {DateTime.Now:HH:mm:ss}. Paste them into a GitHub issue. Nothing is sent automatically.";
     }
 
     private void ScaleColumns(ListView list)
@@ -87,6 +123,12 @@ internal sealed class DeviceWindow : Form
         var rows = new List<(string, string)>
         {
             ("Headset", protocol?.Description.HeadsetName ?? "No supported headset adapter connected"),
+            ("Support", protocol switch
+            {
+                null => "–",
+                { IsSupported: true } => "Supported",
+                _ => "NOT supported yet (experimental). Please tell us if it works: \"Report a device on GitHub…\" below",
+            }),
             ("Headset model", protocol?.Description.HeadsetModel ?? "–"),
             ("Connection", _monitor.State switch
             {
@@ -124,7 +166,7 @@ internal sealed class DeviceWindow : Form
             ("Adapter reports", protocol?.Description.Reports ?? "–"),
             ("HID collection", device is null ? "–" : $"usage page 0x{device.UsagePage:X4}, {device.InputReportLength}-byte input reports"),
             ("Device path", device?.Path ?? "–"),
-            ("Saved status file", _store.FilePath),
+            ("Saved status file", WithoutUserProfile(_store.FilePath)),
         };
 
         _deviceList.BeginUpdate();
@@ -137,49 +179,76 @@ internal sealed class DeviceWindow : Form
     {
         _historyList.BeginUpdate();
         _historyList.Items.Clear();
-        foreach (var s in _monitor.History.Reverse())
+        foreach (var entry in _monitor.History.Reverse())
         {
-            _historyList.Items.Add(new ListViewItem(
-            [
-                s.ReceivedAt.ToString("HH:mm:ss", CultureInfo.CurrentCulture),
-                s.Trigger ?? "–",
-                s.BatteryPercent is { } p ? $"{p} %" : "–",
-                s.IsCharging switch { true => "Yes", false => "No", null => "?" },
-                s.IsHeadsetOn ? "On" : "Off",
-                s.IsMicMuted switch { true => "Muted", false => "Live", null => "–" },
-                s.VolumePercent is { } v ? $"{v} %" : "–",
-                FormatHex(s.RawReport),
-            ]));
+            var time = entry.At.ToString("HH:mm:ss", CultureInfo.CurrentCulture);
+            var raw = FormatHex(entry.Raw);
+            _historyList.Items.Add(entry.Decoded is not { } s
+                ? new ListViewItem([time, "(not decoded)", "–", "–", "–", "–", "–", raw])
+                : new ListViewItem(
+                [
+                    time,
+                    s.Trigger ?? "–",
+                    s.BatteryPercent is { } p ? $"{p} %" : "–",
+                    s.IsCharging switch { true => "Yes", false => "No", null => "?" },
+                    s.IsHeadsetOn ? "On" : "Off",
+                    s.IsMicMuted switch { true => "Muted", false => "Live", null => "–" },
+                    s.VolumePercent is { } v ? $"{v} %" : "–",
+                    raw,
+                ]));
         }
         _historyList.EndUpdate();
     }
 
     private Panel SupportedDevicesPage()
     {
-        var list = CreateList(("Headset", 190), ("Model", 85), ("Adapter", 85), ("USB id", 90), ("Shows", 290));
+        var list = CreateList(("Headset", 190), ("Model", 85), ("Adapter", 85), ("USB id", 90), ("Status", 290));
         ScaleColumns(list);
+        ListViewCopy.Attach(list);
         list.Dock = DockStyle.Top;
-        list.Height = LogicalToDeviceUnits(30 + 24 * SupportedHeadsets.All.Count);
+        list.Height = LogicalToDeviceUnits(30 + 24 * (SupportedHeadsets.All.Count + 1));
 
         var text = new RichText();
         foreach (var protocol in SupportedHeadsets.All)
         {
             var d = protocol.Description;
-            list.Items.Add(new ListViewItem([d.HeadsetName, d.HeadsetModel, d.AdapterModel, $"{protocol.VendorId:X4}:{protocol.ProductId:X4}", d.Reports]));
+            list.Items.Add(new ListViewItem([d.HeadsetName, d.HeadsetModel, d.AdapterModel, $"{protocol.VendorId:X4}:{protocol.ProductId:X4}", "Supported: " + d.Reports]));
 
             text.Heading($"What to expect: {d.HeadsetName}");
             foreach (var limitation in d.Limitations) text.Bullet(limitation);
         }
-        text.Heading("Your headset isn't listed?");
-        text.Paragraph("Support is added one headset at a time, by recording what its adapter sends. If you own " +
-                       "another wireless headset, you can help: the project's page explains how to capture its " +
-                       $"reports with the included probe tool.\n{RepositoryUrl}");
+        list.Items.Add(new ListViewItem(["Other Sony headsets", "–", "–", "054C:*", "Not supported yet: can be tried (experimental)"]));
+
+        text.Heading("Trying a headset that isn't supported yet");
+        text.Paragraph("With the option above turned on, and no supported headset plugged in, Headset Stats listens to other " +
+                       "Sony devices and tries to decode them with the PULSE 3D format. Similar Sony adapters may use the " +
+                       "same messages, so it might just work. The device is marked \"Not supported yet\", and the app " +
+                       "only listens; it never sends anything to the device. Controllers such as the DualSense are skipped.");
+        text.Paragraph("Please tell us how it went, whether it works, partly works or not at all. Press \"Report a device on " +
+                       "GitHub…\" at the bottom: it copies the device logs and opens a ready-made form where you paste " +
+                       "them. That's usually all we need to add proper support.");
+        text.Paragraph($"More ways to help: {RepositoryUrl}/blob/main/CONTRIBUTING.md");
+
+        var tryUnsupported = new CheckBox
+        {
+            Text = "Try Sony headsets that aren't supported yet (experimental, only listens)",
+            Checked = _settings.TryUnsupportedDevices,
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            Padding = new Padding(0, LogicalToDeviceUnits(6), 0, LogicalToDeviceUnits(2)),
+        };
+        tryUnsupported.CheckedChanged += (_, _) =>
+        {
+            _settings.TryUnsupportedDevices = tryUnsupported.Checked;
+            _monitor.Rescan();
+        };
 
         var page = new Panel { Padding = new Padding(LogicalToDeviceUnits(8)) };
         page.Controls.Add(text.Control);
-        page.Controls.Add(new Panel { Dock = DockStyle.Top, Height = LogicalToDeviceUnits(8) });
-        text.ScrollToTop();
+        page.Controls.Add(new Panel { Dock = DockStyle.Top, Height = LogicalToDeviceUnits(4) });
+        page.Controls.Add(tryUnsupported);
         page.Controls.Add(list);
+        text.ScrollToTop();
         return page;
     }
 
@@ -229,7 +298,9 @@ internal sealed class DeviceWindow : Form
 
         text.Heading("Privacy");
         text.Paragraph("Headset Stats works entirely offline. It collects no data, has no telemetry and makes no network " +
-                       "connections. The only thing it stores is the last status message, in your local app data folder.");
+                       "connections. It stores only the last status message and your settings, in your local app data " +
+                       "folder. \"Copy device logs\" puts a report on your clipboard; it's shared only if you paste it " +
+                       "somewhere yourself, and it contains no file paths or user names.");
 
         text.Heading("Trademarks");
         text.Paragraph("Not affiliated with or endorsed by Sony Interactive Entertainment. PlayStation, PULSE, PULSE 3D " +
@@ -260,6 +331,13 @@ internal sealed class DeviceWindow : Form
     }
 
     private static string FormatHex(byte[] bytes) => string.Join(' ', bytes.Select(b => b.ToString("X2", CultureInfo.InvariantCulture)));
+
+    // Shows %LOCALAPPDATA% instead of the full profile path, so screenshots and copied text don't reveal the user name.
+    private static string WithoutUserProfile(string path)
+    {
+        var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        return path.StartsWith(local, StringComparison.OrdinalIgnoreCase) ? "%LOCALAPPDATA%" + path[local.Length..] : path;
+    }
 
     // USB bcdDevice: 0x0100 → "1.00"
     private static string FormatBcd(ushort value) => $"{value >> 8:X}.{value & 0xFF:X2}";

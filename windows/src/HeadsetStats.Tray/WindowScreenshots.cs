@@ -17,6 +17,12 @@ internal static class WindowScreenshots
     [DllImport("dwmapi.dll")]
     private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out Rect value, int size);
 
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    private const int DwmwaWindowCornerPreference = 33;
+    private const int DwmwcpDoNotRound = 1;
+
     private const int DwmwaExtendedFrameBounds = 9;
 
     public static void Save(string folder, string suffix)
@@ -24,9 +30,10 @@ internal static class WindowScreenshots
         Directory.CreateDirectory(folder);
 
         var store = new StatusStore();
-        using var monitor = new HeadsetMonitor(store: store);
+        var settings = new AppSettings();
+        using var monitor = new HeadsetMonitor(store: store, tryUnsupported: () => settings.TryUnsupportedDevices);
         monitor.Start();
-        using var window = new DeviceWindow(monitor, store, new ButtonActionSettings());
+        using var window = new DeviceWindow(monitor, store, settings);
 
         // Give the monitor a moment to find the adapter and restore the saved status.
         var timer = new System.Windows.Forms.Timer { Interval = 2500 };
@@ -45,7 +52,8 @@ internal static class WindowScreenshots
                 // Visible frame only (excludes the invisible resize border), with the window topmost,
                 // so the capture contains nothing but this window. PrintWindow misrenders native ListViews.
                 DwmGetWindowAttribute(window.Handle, DwmwaExtendedFrameBounds, out var r, Marshal.SizeOf<Rect>());
-                var bounds = Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+                // Trim the 1 px Windows 11 border: it is semi-transparent and would include background pixels.
+                var bounds = Rectangle.FromLTRB(r.Left + 1, r.Top + 1, r.Right - 1, r.Bottom - 1);
                 using var bitmap = new Bitmap(bounds.Width, bounds.Height);
                 using (var g = Graphics.FromImage(bitmap)) g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
                 // Save via a stream: GDI+ file paths are limited to MAX_PATH.
@@ -55,7 +63,13 @@ internal static class WindowScreenshots
             window.Close();
         };
         window.TopMost = true;
-        window.Shown += (_, _) => timer.Start();
+        window.Shown += (_, _) =>
+        {
+            // Square corners, so no background shows through the rounded corners.
+            var square = DwmwcpDoNotRound;
+            DwmSetWindowAttribute(window.Handle, DwmwaWindowCornerPreference, ref square, sizeof(int));
+            timer.Start();
+        };
         Application.Run(window);
     }
 }

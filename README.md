@@ -29,6 +29,8 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 - **Chat / Game button actions**: make the headset's Chat or Game button open any shortcut, app, file or
   website, or run your own command (in addition to changing the headset's balance)
 - **Light and dark mode**, following your Windows setting
+- **Every value is selectable and copyable** (Ctrl+C, right-click → Copy), plus **Copy device logs** for bug reports
+- **Open to new headsets**: other Sony headsets can be tried in an experimental, listen-only mode (see below)
 - Start with Windows (optional)
 - Offline, no telemetry, no third-party dependencies
 
@@ -37,8 +39,13 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 | Headset | Adapter (USB id) | Battery | Charging | On/off |
 |---|---|---|---|---|
 | PULSE 3D wireless headset (CFI-ZWH1) | CFI-ZWD1 (`054C:0D5E`) | ✅ 10 % steps | ✅ | ✅ |
+| Other Sony headsets | `054C:*` | 🧪 experimental | 🧪 | 🧪 |
 
-Own a headset that isn't listed? See [Adding a headset](#adding-a-headset).
+🧪 **Not supported yet, but you can try it.** With no supported adapter plugged in, the app listens
+(read-only) to other Sony devices, marks them *"Not supported yet (experimental)"* and tries the PULSE 3D
+format, which similar Sony adapters may share. Controllers like the DualSense are skipped. **Tell us whether it
+works**: press *Report a device on GitHub…* in the app. It copies the device logs and opens a ready-made issue.
+See [CONTRIBUTING.md](CONTRIBUTING.md#try-the-app-with-your-headset-no-coding-needed).
 
 ### Known limitations (PULSE 3D)
 

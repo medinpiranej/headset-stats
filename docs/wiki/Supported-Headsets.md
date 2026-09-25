@@ -3,6 +3,7 @@
 | Headset | Adapter | USB id | Battery | Charging | On/off | Platforms |
 |---|---|---|---|---|---|---|
 | PULSE 3D wireless headset (CFI-ZWH1) | CFI-ZWD1 | `054C:0D5E` | ✅ 10 % steps | ✅ | ✅ | Windows |
+| Other Sony headsets | ? | `054C:*` | 🧪 experimental | 🧪 | 🧪 | Windows |
 
 The app identifies the headset by its adapter's USB id. All colour variants of the PULSE 3D appear
 to use the same adapter. The adapter doesn't expose a serial number, colour, or headset firmware
@@ -23,4 +24,12 @@ version, only its own revision (`REV_0100`).
 | PULSE Explore | PlayStation Link earbuds |
 | Older PlayStation Gold / Platinum | Already supported on Linux by other projects |
 
-Have one of these? Follow the [Reverse-engineering guide](Reverse-Engineering-Guide) and open an issue with your capture.
+Have one of these? The easiest way to help:
+
+1. Run Headset Stats with only that headset's adapter plugged in. It appears as **"Not supported yet
+   (experimental)"**. The app only listens and tries the PULSE 3D format.
+2. Use it for a minute (power off/on, buttons, charging cable).
+3. Press **Report a device on GitHub…**: the device logs are copied and a *New headset* issue opens. Paste them
+   and tell us what worked.
+
+For deeper captures, see the [Reverse-engineering guide](Reverse-Engineering-Guide).

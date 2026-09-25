@@ -14,6 +14,13 @@ Double-click the tray icon, or right-click → **Device details…**, to open th
 | Supported devices | All supported headsets, and what to expect from each |
 | About | How the information is gathered, what to expect, privacy, trademarks |
 
+Every list is copyable (Ctrl+C / Ctrl+A / right-click). The bottom bar has **Copy device logs** and
+**Report a device on GitHub…**; the tray menu has **Copy device logs** too. The same report can be written to
+a file with `HeadsetStats.exe --report report.md`.
+
+With no supported adapter plugged in, other Sony devices are tried read-only as "Not supported yet
+(experimental)". Toggle this on the Supported devices tab.
+
 Regenerate the images after changing the icon or the window:
 
 ```

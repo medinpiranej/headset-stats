@@ -11,6 +11,18 @@ internal static class Program
             return;
         }
 
+        if (args is ["--report", var reportPath])
+        {
+            // Same report as "Copy device logs", written to a file (for support and scripts).
+            var settings = new HeadsetStats.Core.AppSettings();
+            using var monitor = new HeadsetStats.Core.HeadsetMonitor(
+                store: new HeadsetStats.Core.StatusStore(), tryUnsupported: () => settings.TryUnsupportedDevices);
+            monitor.Start();
+            Thread.Sleep(3000);
+            File.WriteAllText(reportPath, HeadsetStats.Core.DiagnosticReport.Create(monitor, Application.ProductVersion.Split('+')[0]));
+            return;
+        }
+
         ApplicationConfiguration.Initialize();
 
         if (args is ["--screenshots", var folder, ..])

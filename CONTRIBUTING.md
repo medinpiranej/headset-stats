@@ -7,13 +7,32 @@ your headset behaves to adding a whole new platform.
 
 | You can… | How |
 |---|---|
-| **Get your headset supported** | Capture what its adapter sends with the probe tool and open a *New headset* issue. You don't need to write code. |
-| **Report a bug** | Open a *Bug report* issue with your headset, Windows version, and the contents of the app's **History** tab. |
+| **Get your headset supported** | [Try the app with your headset](#try-the-app-with-your-headset-no-coding-needed) and send us the device logs. You don't need to write code. |
+| **Report a bug** | Open a *Bug report* issue and paste the app's **Copy device logs** output. |
 | **Fix or improve the Windows app** | Pick an open issue, or open one to discuss your idea first. |
 | **Build the macOS, Linux or Android app** | See the README in `macos/`, `linux/` or `android/` and open an issue to coordinate. |
 | **Improve the docs** | README, `docs/PROTOCOL.md`, and the wiki pages in `docs/wiki/`. |
 
-## Capturing a new headset
+## Try the app with your headset (no coding needed)
+
+The Windows app is open to headsets it doesn't support yet. If you own another Sony headset
+(for example a PULSE Elite or PULSE Explore with the PlayStation Link adapter, or an older
+PlayStation headset):
+
+1. Run Headset Stats with only your headset's USB adapter plugged in (unplug any PULSE 3D adapter).
+2. Make sure **Supported devices → "Try Sony headsets that aren't supported yet"** is ticked (it is by default).
+   The app then shows your device as **"Not supported yet (experimental)"**. It only listens to the
+   adapter and never sends it anything.
+3. Use the headset for a minute: switch it off and on, press its buttons, plug the charging cable in and out.
+4. Check the tray icon and the **Device** tab. Does the battery look right? Charging? Mute?
+5. Press **Report a device on GitHub…** (bottom of the window). It copies the **device logs** and opens a
+   *New headset* issue. Paste the logs and tell us what worked, what was wrong, and what was missing.
+
+The device logs contain the app and Windows version, the Sony devices on your PC with their capabilities,
+and the raw messages received. They don't contain file paths or your user name. Nothing is sent
+automatically; you choose what to paste.
+
+## Capturing a new headset in detail
 
 ```
 cd windows

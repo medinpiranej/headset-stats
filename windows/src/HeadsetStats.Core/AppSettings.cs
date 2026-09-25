@@ -22,8 +22,8 @@ public sealed record ButtonAction(ButtonActionKind Kind, string Target)
     public bool IsConfigured => Kind != ButtonActionKind.None && !string.IsNullOrWhiteSpace(Target);
 }
 
-/// <summary>User-configured button actions, persisted as JSON in the app's local data folder.</summary>
-public sealed class ButtonActionSettings
+/// <summary>User settings (button actions, experimental device support), persisted as JSON in the app's local data folder.</summary>
+public sealed class AppSettings
 {
     /// <summary>Buttons the user can assign actions to. Volume and mute keep their headset function only.</summary>
     public static IReadOnlyList<HeadsetButton> Assignable { get; } = [HeadsetButton.Chat, HeadsetButton.Game];
@@ -36,8 +36,9 @@ public sealed class ButtonActionSettings
 
     private readonly string _path;
     private Dictionary<HeadsetButton, ButtonAction> _actions = [];
+    private bool _tryUnsupportedDevices = true;
 
-    public ButtonActionSettings(string? path = null)
+    public AppSettings(string? path = null)
     {
         _path = path ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HeadsetStats", "settings.json");
@@ -45,6 +46,13 @@ public sealed class ButtonActionSettings
     }
 
     public string FilePath => _path;
+
+    /// <summary>Listen to Sony devices that aren't supported yet and try to decode them (read-only). On by default.</summary>
+    public bool TryUnsupportedDevices
+    {
+        get => _tryUnsupportedDevices;
+        set { _tryUnsupportedDevices = value; Save(); }
+    }
 
     public ButtonAction Get(HeadsetButton button) => _actions.GetValueOrDefault(button, ButtonAction.Nothing);
 
@@ -60,6 +68,7 @@ public sealed class ButtonActionSettings
         {
             var file = JsonSerializer.Deserialize<SettingsFile>(File.ReadAllText(_path), Json);
             _actions = file?.ButtonActions ?? [];
+            _tryUnsupportedDevices = file?.TryUnsupportedDevices ?? true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -72,7 +81,7 @@ public sealed class ButtonActionSettings
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            File.WriteAllText(_path, JsonSerializer.Serialize(new SettingsFile(_actions), Json));
+            File.WriteAllText(_path, JsonSerializer.Serialize(new SettingsFile(_actions, _tryUnsupportedDevices), Json));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -80,5 +89,5 @@ public sealed class ButtonActionSettings
         }
     }
 
-    private sealed record SettingsFile(Dictionary<HeadsetButton, ButtonAction> ButtonActions);
+    private sealed record SettingsFile(Dictionary<HeadsetButton, ButtonAction>? ButtonActions, bool? TryUnsupportedDevices);
 }

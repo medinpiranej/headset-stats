@@ -18,5 +18,11 @@ labels: bug
 - Windows version:
 - App version (About tab):
 
-**History tab**
-<!-- Copy the rows from the app's device window → History tab, if relevant -->
+**Device logs**
+<!-- In Headset Stats: "Copy device logs" (bottom of the window or tray menu), then paste here. -->
+
+<details><summary>Device logs</summary>
+
+PASTE HERE
+
+</details>

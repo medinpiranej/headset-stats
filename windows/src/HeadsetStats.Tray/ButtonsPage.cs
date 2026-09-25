@@ -6,11 +6,20 @@ namespace HeadsetStats.Tray;
 /// <summary>"Buttons" tab: assign actions to the Chat and Game buttons, and show live button state.</summary>
 internal sealed class ButtonsPage : Panel
 {
-    private readonly ButtonActionSettings _settings;
-    private readonly Label _liveState = new() { AutoSize = true, Margin = new Padding(0, 4, 0, 8) };
+    private readonly AppSettings _settings;
+    // Read-only TextBox rather than a Label so the values can be selected and copied.
+    private readonly TextBox _liveState = new()
+    {
+        ReadOnly = true,
+        Multiline = true,
+        BorderStyle = BorderStyle.None,
+        BackColor = SystemColors.Control,
+        TabStop = false,
+        Margin = new Padding(0, 4, 0, 8),
+    };
     private readonly Dictionary<HeadsetButton, Label> _results = [];
 
-    public ButtonsPage(ButtonActionSettings settings, Func<int, int> scale)
+    public ButtonsPage(AppSettings settings, Func<int, int> scale)
     {
         _settings = settings;
         Padding = new Padding(scale(12));
@@ -28,9 +37,10 @@ internal sealed class ButtonsPage : Panel
                    "the headset's game/chat balance as usual; the action runs in addition. Actions only run while " +
                    "Headset Stats is running.",
         });
+        _liveState.Size = new Size(scale(640), (Font.Height + 2) * 2);
         layout.Controls.Add(_liveState);
 
-        foreach (var button in ButtonActionSettings.Assignable)
+        foreach (var button in AppSettings.Assignable)
             layout.Controls.Add(ButtonGroup(button, scale));
 
         Controls.Add(layout);
@@ -49,7 +59,7 @@ internal sealed class ButtonsPage : Panel
             var b => $"{b} toward game",
         };
         var last = lastPress is { } p ? $"{ButtonName(p.Button)} at {p.At:HH:mm:ss}" : "none yet";
-        _liveState.Text = $"Headset volume: {volume}    ·    Mic: {mic}    ·    Balance: {balance}\nLast button press: {last}";
+        _liveState.Text = $"Headset volume: {volume}    ·    Mic: {mic}    ·    Balance: {balance}{Environment.NewLine}Last button press: {last}";
     }
 
     private GroupBox ButtonGroup(HeadsetButton button, Func<int, int> scale)

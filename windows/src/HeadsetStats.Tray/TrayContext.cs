@@ -6,7 +6,7 @@ namespace HeadsetStats.Tray;
 internal sealed class TrayContext : ApplicationContext
 {
     private readonly StatusStore _store = new();
-    private readonly ButtonActionSettings _buttonActions = new();
+    private readonly AppSettings _settings = new();
     private readonly Dictionary<HeadsetButton, DateTime> _lastActionRun = [];
     private readonly HeadsetMonitor _monitor;
     private readonly NotifyIcon _tray = new();
@@ -23,7 +23,7 @@ internal sealed class TrayContext : ApplicationContext
     public TrayContext()
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
-        _monitor = new HeadsetMonitor(store: _store);
+        _monitor = new HeadsetMonitor(store: _store, tryUnsupported: () => _settings.TryUnsupportedDevices);
 
         _startupItem.Checked = StartupRegistration.IsEnabled;
         _startupItem.CheckedChanged += (_, _) => StartupRegistration.IsEnabled = _startupItem.Checked;
@@ -39,6 +39,7 @@ internal sealed class TrayContext : ApplicationContext
         menu.Items.Add(details);
         menu.Items.Add("Supported devices", null, (_, _) => ShowWindow(DeviceWindowTab.SupportedDevices));
         menu.Items.Add(_startupItem);
+        menu.Items.Add("Copy device logs", null, (_, _) => CopyDeviceLogs());
         menu.Items.Add("About", null, (_, _) => ShowWindow(DeviceWindowTab.About));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
@@ -82,7 +83,13 @@ internal sealed class TrayContext : ApplicationContext
         _statusItem.Text = text;
         _modelItem.Text = _monitor.ActiveProtocol?.DisplayName ?? "";
         _modelItem.Visible = _monitor.ActiveProtocol is not null;
-        _tray.Text = Truncate((_monitor.ActiveProtocol?.DisplayName ?? "Headset Stats") + "\n" + text, 127);
+        var name = _monitor.ActiveProtocol switch
+        {
+            null => "Headset Stats",
+            { IsSupported: false } => "Not supported yet (experimental)",
+            var p => p.DisplayName,
+        };
+        _tray.Text = Truncate(name + "\n" + text, 127);
 
         var kind = _monitor.State switch
         {
@@ -112,7 +119,7 @@ internal sealed class TrayContext : ApplicationContext
     private void OnButtonPressed(HeadsetButton button)
     {
         _window?.RefreshData();
-        var action = _buttonActions.Get(button);
+        var action = _settings.Get(button);
         if (!action.IsConfigured) return;
 
         // One press = one report, but guard against bursts (e.g. a held button repeating).
@@ -126,11 +133,18 @@ internal sealed class TrayContext : ApplicationContext
             _tray.ShowBalloonTip(5000, $"{button} button action failed", error, ToolTipIcon.Error);
     }
 
+    private void CopyDeviceLogs()
+    {
+        Clipboard.SetText(DiagnosticReport.Create(_monitor, Application.ProductVersion.Split('+')[0]));
+        _tray.ShowBalloonTip(4000, "Device logs copied",
+            "Paste them into a GitHub issue to help support your headset. Nothing is sent automatically.", ToolTipIcon.Info);
+    }
+
     private void ShowWindow(DeviceWindowTab tab)
     {
         if (_window is null || _window.IsDisposed)
         {
-            _window = new DeviceWindow(_monitor, _store, _buttonActions);
+            _window = new DeviceWindow(_monitor, _store, _settings);
             _window.FormClosed += (_, _) => _window = null;
         }
         _window.ShowTab(tab);

@@ -25,7 +25,9 @@ public sealed class HeadsetMonitor : IDisposable
 
     private readonly IReadOnlyList<IHeadsetProtocol> _protocols;
     private readonly StatusStore? _store;
-    private readonly List<HeadsetStatus> _history = [];
+    private readonly List<ReportEntry> _history = [];
+    private readonly Func<bool> _tryUnsupported;
+    private DateTimeOffset _lastRawNotify;
     private readonly ChargeSettling _settling = new();
     private readonly CancellationTokenSource _cts = new();
     private Task? _loop;
@@ -36,8 +38,8 @@ public sealed class HeadsetMonitor : IDisposable
     /// <summary>The HID collection currently being read, or null when no adapter is connected.</summary>
     public HidDeviceInfo? ActiveDevice { get; private set; }
 
-    /// <summary>Live status reports received since the app started, oldest first.</summary>
-    public IReadOnlyList<HeadsetStatus> History
+    /// <summary>Every report received since the app started (decoded when possible), oldest first.</summary>
+    public IReadOnlyList<ReportEntry> History
     {
         get { lock (_history) return _history.ToArray(); }
     }
@@ -57,13 +59,25 @@ public sealed class HeadsetMonitor : IDisposable
     /// <summary>A button was pressed on the headset (live reports only, never restored ones). Raised on a thread-pool thread.</summary>
     public event EventHandler<HeadsetButton>? ButtonPressed;
 
-    public HeadsetMonitor(IReadOnlyList<IHeadsetProtocol>? protocols = null, StatusStore? store = null)
+    /// <param name="tryUnsupported">
+    /// Checked on every search: when true and no supported adapter is present, listen (read-only) to other Sony devices.
+    /// </param>
+    public HeadsetMonitor(IReadOnlyList<IHeadsetProtocol>? protocols = null, StatusStore? store = null, Func<bool>? tryUnsupported = null)
     {
         _protocols = protocols ?? SupportedHeadsets.All;
         _store = store;
+        _tryUnsupported = tryUnsupported ?? (() => false);
     }
 
     public void Start() => _loop ??= Task.Run(() => RunAsync(_cts.Token));
+
+    /// <summary>Drops the current device and searches again (e.g. after the experimental setting changed).</summary>
+    public void Rescan()
+    {
+        try { _session?.Cancel(); } catch (ObjectDisposedException) { }
+    }
+
+    private CancellationTokenSource? _session;
 
     private async Task RunAsync(CancellationToken ct)
     {
@@ -79,6 +93,8 @@ public sealed class HeadsetMonitor : IDisposable
             }
 
             var (protocol, collection) = match.Value;
+            using var session = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            _session = session;
             try
             {
                 using var connection = HidConnection.Open(collection);
@@ -87,15 +103,15 @@ public sealed class HeadsetMonitor : IDisposable
                 SetState(MonitorState.WaitingForHeadset, protocol, LastStatus ?? _store?.Load(protocol));
                 while (!ct.IsCancellationRequested)
                 {
-                    var report = await connection.ReadInputReportAsync(ct).ConfigureAwait(false);
+                    var report = await connection.ReadInputReportAsync(session.Token).ConfigureAwait(false);
                     var status = protocol.TryParse(report);
-                    if (status is null) continue;
-                    _settling.Observe(LastStatus, status);
-                    lock (_history)
+                    Record(new ReportEntry(status?.ReceivedAt ?? DateTimeOffset.Now, report, status));
+                    if (status is null)
                     {
-                        _history.Add(status);
-                        if (_history.Count > HistoryLimit) _history.RemoveAt(0);
+                        NotifyRawReport();
+                        continue;
                     }
+                    _settling.Observe(LastStatus, status);
                     SetState(MonitorState.Reporting, protocol, status);
                     _store?.Save(protocol, status);
                     if (status.Button is { } button)
@@ -108,6 +124,11 @@ public sealed class HeadsetMonitor : IDisposable
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
                 return;
+            }
+            catch (OperationCanceledException)
+            {
+                // Rescan() requested: search again right away.
+                continue;
             }
             catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception)
             {
@@ -125,7 +146,31 @@ public sealed class HeadsetMonitor : IDisposable
                 .FirstOrDefault(protocol.IsStatusCollection);
             if (collection is not null) return (protocol, collection);
         }
+
+        if (_tryUnsupported())
+        {
+            foreach (var (protocol, collection) in ExperimentalProtocol.FindCandidates(_protocols))
+                return (protocol, collection);
+        }
         return null;
+    }
+
+    private void Record(ReportEntry entry)
+    {
+        lock (_history)
+        {
+            _history.Add(entry);
+            if (_history.Count > HistoryLimit) _history.RemoveAt(0);
+        }
+    }
+
+    // Undecodable reports only change the history; notify at most twice a second in case a device streams.
+    private void NotifyRawReport()
+    {
+        var now = DateTimeOffset.Now;
+        if (now - _lastRawNotify < TimeSpan.FromMilliseconds(500)) return;
+        _lastRawNotify = now;
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     private void SetState(MonitorState state, IHeadsetProtocol? protocol, HeadsetStatus? status)

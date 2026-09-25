@@ -79,9 +79,16 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
   mode), and don't use `TabControl` (not themed; use `ThemedTabs`). Check `--screenshots` in both `light` and `dark`.
 - Screenshots capture the window's DWM frame bounds while it's topmost. Don't use `PrintWindow` (it misrenders
   native ListViews), and never capture more than the app's own window.
-- **Button actions** (`ButtonActionSettings` in Core, `ButtonActionRunner` + `ButtonsPage` in Tray): Chat/Game only,
+- **Button actions** (`AppSettings` in Core, `ButtonActionRunner` + `ButtonsPage` in Tray): Chat/Game only,
   live presses only (`HeadsetMonitor.ButtonPressed`), debounced 500 ms. "Open" shell-executes the target; "Command"
   runs `cmd.exe /d /s /c "<command>"` with no window.
+- **Unsupported devices** (`ExperimentalProtocol`): with `AppSettings.TryUnsupportedDevices` on (default) and no
+  supported adapter present, the monitor listens read-only to other Sony (054C) devices, excluding known controllers,
+  and tries the PULSE 3D parser. `IHeadsetProtocol.IsSupported` is false, and the UI says "Not supported yet
+  (experimental)". Every raw report goes into `HeadsetMonitor.History` (`ReportEntry`, decoded or not).
+- **Device logs** (`DiagnosticReport`): must never include file paths or user names (tested). The UI shows
+  `%LOCALAPPDATA%` instead of the profile path for the same reason, since screenshots go into the public repo.
+- All list views use `ListViewCopy` (Ctrl+C, Ctrl+A, right-click Copy / Copy value / Copy all).
 - Tray icon (`BatteryIcon.cs`) is vector-drawn per `TrayIconKind`. After changing it, regenerate
   `docs/tray-icons.png` and check 16 px readability on both dark and light backgrounds.
 - Commits end with the `Co-Authored-By` trailer when Claude authored them.
