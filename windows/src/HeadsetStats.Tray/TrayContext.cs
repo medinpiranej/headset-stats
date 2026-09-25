@@ -4,8 +4,6 @@ namespace HeadsetStats.Tray;
 
 internal sealed class TrayContext : ApplicationContext
 {
-    private const int LowBatteryPercent = 15;
-
     private readonly HeadsetMonitor _monitor = new(store: new StatusStore());
     private readonly NotifyIcon _tray = new();
     private readonly ToolStripMenuItem _modelItem = new() { Enabled = false, Visible = false };
@@ -42,7 +40,7 @@ internal sealed class TrayContext : ApplicationContext
         var charging = status?.IsCharging == true;
         var lastKnown = _monitor.LastKnownBatteryPercent;
         var percent = status is { IsHeadsetOn: true } ? status.BatteryPercent : null;
-        var low = percent is not null && percent <= LowBatteryPercent && !charging;
+        var low = percent is not null && percent <= BatteryIcon.LowPercent && !charging;
 
         var text = _monitor.State switch
         {
@@ -61,13 +59,17 @@ internal sealed class TrayContext : ApplicationContext
         _modelItem.Visible = _monitor.ActiveProtocol is not null;
         _tray.Text = Truncate((_monitor.ActiveProtocol?.DisplayName ?? "Headset Stats") + "\n" + text, 127);
 
-        var icon = _monitor.State == MonitorState.NoAdapter || status is not { IsHeadsetOn: true }
-            ? BatteryIcon.Create(BatteryIconKind.Unknown, null, low: false)
-            : charging
-                ? BatteryIcon.Create(BatteryIconKind.Charging, null, low: false)
-                : BatteryIcon.Create(BatteryIconKind.Level, percent, low);
+        var kind = _monitor.State switch
+        {
+            MonitorState.NoAdapter => TrayIconKind.NoAdapter,
+            _ when status is null => TrayIconKind.Waiting,
+            _ when !status.IsHeadsetOn => TrayIconKind.HeadsetOff,
+            _ when charging => TrayIconKind.Charging,
+            _ when percent is null => TrayIconKind.Waiting,
+            _ => TrayIconKind.Level,
+        };
         var old = _tray.Icon;
-        _tray.Icon = icon;
+        _tray.Icon = BatteryIcon.Create(kind, percent);
         old?.Dispose();
 
         if (low && !_lowBatteryNotified)

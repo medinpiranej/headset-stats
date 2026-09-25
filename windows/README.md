@@ -2,6 +2,14 @@
 
 Tray app for Windows 10/11 that shows the headset battery next to the clock.
 
+![Tray icon states at 16, 24 and 32 px on dark and light taskbars](../docs/tray-icons.png)
+
+Regenerate this preview after changing `BatteryIcon.cs`:
+
+```
+dotnet run --project src/HeadsetStats.Tray -- --render-icons ../docs/tray-icons.png
+```
+
 ## Layout
 
 | Project | What it is |
