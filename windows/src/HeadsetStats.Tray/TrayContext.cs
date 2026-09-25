@@ -22,7 +22,9 @@ internal sealed class TrayContext : ApplicationContext
 
     public TrayContext()
     {
-        _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+        // Must be a WinForms context created here on the UI thread. Before Application.Run, Current is
+        // .NET's default context, whose Post runs on the thread pool, which crashed the window's ListViews.
+        _ui = new WindowsFormsSynchronizationContext();
         _monitor = new HeadsetMonitor(store: _store, tryUnsupported: () => _settings.TryUnsupportedDevices);
 
         _startupItem.Checked = StartupRegistration.IsEnabled;

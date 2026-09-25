@@ -108,6 +108,12 @@ internal sealed class DeviceWindow : Form
     public void RefreshData()
     {
         if (IsDisposed) return;
+        // Defensive: controls may only be touched on the UI thread.
+        if (InvokeRequired)
+        {
+            BeginInvoke(RefreshData);
+            return;
+        }
         FillDevice();
         FillHistory();
         _buttonsPage.ShowState(_monitor.LastStatus, _monitor.LastButtonPress);

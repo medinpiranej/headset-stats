@@ -66,6 +66,9 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - New headset = implement `IHeadsetProtocol`, register it in `SupportedHeadsets.All`, add tests built
   from **real captured reports** (with a comment giving the capture date), and document it in `docs/PROTOCOL.md`.
 - `HeadsetMonitor` raises events on a thread-pool thread; the tray marshals them to the UI thread.
+  Use a `WindowsFormsSynchronizationContext` created on the UI thread. `SynchronizationContext.Current` before
+  `Application.Run` is the default context, whose `Post` runs on the thread pool; that crashed the window's
+  ListViews on every event. `DeviceWindow.RefreshData` also re-invokes itself if called off the UI thread.
   It also exposes `ActiveDevice` (adapter USB id, firmware, HID path) and `History` (live reports this session).
 - User-facing text about a headset (model numbers, what it reports, limitations) lives in its protocol's
   `DeviceDescription`. The Supported devices tab is generated from `SupportedHeadsets.All`, so
