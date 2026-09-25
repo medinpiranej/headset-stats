@@ -1,5 +1,7 @@
 # Microsoft Store listing: Headset Stats (beta)
 
+Store ID **9P8NLJ432R5R** · package **MedinPiranej.HeadsetStats** · PFN `MedinPiranej.HeadsetStats_n7g8jr7bjpyvp`
+
 Copy-paste source for Partner Center. Keep Sony trademarks out of the **name** and **keywords**; the
 description may name compatible hardware (a factual compatibility statement) with the disclaimer.
 
@@ -85,6 +87,7 @@ Utilities & tools (subcategory: none)
 | Privacy policy | https://medinpiranej.github.io/headset-stats/privacy.html (needs GitHub Pages, see README) |
 | Website | https://medinpiranej.github.io/headset-stats/ |
 | Support contact | https://github.com/medinpiranej/headset-stats/issues |
+| Store page (after approval) | https://apps.microsoft.com/detail/9P8NLJ432R5R |
 
 ## Restricted capability justification (runFullTrust)
 

@@ -32,8 +32,9 @@ renders every state at 16, 24 and 32 px.
 Headset Stats is being submitted to the **Microsoft Store as a free beta for Windows 10 (1809+) and
 Windows 11**.
 
-1. **Install**: open the Store page *(link coming as soon as Microsoft approves the beta)* and click
-   **Get**. Updates then arrive automatically, and you can also install it with `winget install "Headset Stats"`.
+1. **Install**: open **[Headset Stats in the Microsoft Store](https://apps.microsoft.com/detail/9P8NLJ432R5R)** and click
+   **Get** (the page goes live once Microsoft approves the beta). Or, from a terminal: `winget install 9P8NLJ432R5R`.
+   Updates arrive automatically.
 2. **Use it** with your headset for a few days.
 3. **Tell us how it goes**: [open an issue](https://github.com/medinpiranej/headset-stats/issues/new/choose).
    In the app, **Copy device logs** (bottom of the window or the tray menu) gives us everything we need.
