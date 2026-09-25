@@ -196,6 +196,10 @@ internal sealed class DeviceWindow : Form
                        "write code to help get your headset supported. See CONTRIBUTING.md on the project page.\n" +
                        $"{RepositoryUrl}");
 
+        text.Heading("Support the project");
+        text.Paragraph("Headset Stats is free, with nothing locked behind a payment. If it's useful to you, you can " +
+                       "support its development through GitHub Sponsors:\nhttps://github.com/sponsors/medinpiranej");
+
         text.Heading("Privacy");
         text.Paragraph("Headset Stats works entirely offline. It collects no data, has no telemetry and makes no network " +
                        "connections. The only thing it stores is the last status message, in your local app data folder.");

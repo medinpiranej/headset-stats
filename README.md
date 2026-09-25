@@ -91,6 +91,12 @@ plugging the cable in and out. See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for th
 macOS, Linux and Android apps are all welcome, and you don't need to write code to get your
 headset supported. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
+## Support the project
+
+Headset Stats is free and always will be. If it's useful to you, you can support its development
+through [GitHub Sponsors](https://github.com/sponsors/medinpiranej). Starring the repo and
+reporting your headset help too.
+
 ## Privacy
 
 Headset Stats collects no data and makes no network connections. See [PRIVACY.md](PRIVACY.md).
