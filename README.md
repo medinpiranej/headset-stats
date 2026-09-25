@@ -10,7 +10,10 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 
 > **Status: early development.** Battery, charging and on/off state work for the PULSE 3D on Windows.
 
-<img src="docs/screenshots/window-device.png" alt="Device details window" width="560">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/window-device-dark.png">
+  <img src="docs/screenshots/window-device-light.png" alt="Device details window" width="560">
+</picture>
 
 ## Features
 
@@ -23,6 +26,9 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 - **Device details window** (double-click the tray icon): live headset and adapter information, a history
   of every status report with its raw bytes, the list of supported devices, and an About page explaining
   how the data is gathered and what to expect
+- **Chat / Game button actions**: make the headset's Chat or Game button open any shortcut, app, file or
+  website, or run your own command (in addition to changing the headset's balance)
+- **Light and dark mode**, following your Windows setting
 - Start with Windows (optional)
 - Offline, no telemetry, no third-party dependencies
 

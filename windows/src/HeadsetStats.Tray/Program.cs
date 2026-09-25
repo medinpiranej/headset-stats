@@ -10,16 +10,26 @@ internal static class Program
             IconPreview.Save(output);
             return;
         }
-        if (args is ["--screenshots", var folder])
+
+        ApplicationConfiguration.Initialize();
+
+        if (args is ["--screenshots", var folder, ..])
         {
-            WindowScreenshots.Save(folder);
+            var mode = args.Length > 2 ? args[2] : "system";
+            SetColorMode(mode switch { "dark" => SystemColorMode.Dark, "light" => SystemColorMode.Classic, _ => SystemColorMode.System });
+            WindowScreenshots.Save(folder, mode is "dark" or "light" ? "-" + mode : "");
             return;
         }
 
         using var singleInstance = new Mutex(initiallyOwned: true, @"Local\HeadsetStats.Tray", out var isFirst);
         if (!isFirst) return;
 
-        ApplicationConfiguration.Initialize();
+        // Follow Windows' light/dark app setting.
+        SetColorMode(SystemColorMode.System);
         Application.Run(new TrayContext());
     }
+
+    // Dark mode is experimental in .NET 9 WinForms (WFO5001, suppressed in the csproj);
+    // it must be set before any window is created.
+    private static void SetColorMode(SystemColorMode mode) => Application.SetColorMode(mode);
 }

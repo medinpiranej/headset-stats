@@ -86,6 +86,15 @@ public sealed class Pulse3DProtocol : IHeadsetProtocol
             IsMicMuted = isOn ? (flags & FlagMicLive) == 0 : null,
             VolumePercent = volume <= 100 ? volume : null,
             GameChatBalance = (report[BalanceOffset] - BalanceCentre) / BalanceStep,
+            Button = trigger switch
+            {
+                EventVolumeUp => HeadsetButton.VolumeUp,
+                EventVolumeDown => HeadsetButton.VolumeDown,
+                EventGame => HeadsetButton.Game,
+                EventChat => HeadsetButton.Chat,
+                EventMute => HeadsetButton.MicMute,
+                _ => null,
+            },
             Trigger = trigger switch
             {
                 EventVolumeUp => "Volume up",

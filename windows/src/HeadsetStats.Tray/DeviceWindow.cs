@@ -6,7 +6,8 @@ using HeadsetStats.Core.Hid;
 
 namespace HeadsetStats.Tray;
 
-internal enum DeviceWindowTab { Device, History, SupportedDevices, About }
+// Order must match the order tabs are added in the constructor.
+internal enum DeviceWindowTab { Device, History, Buttons, SupportedDevices, About }
 
 /// <summary>Everything the app knows about the connected headset, the supported devices, and how it all works.</summary>
 internal sealed class DeviceWindow : Form
@@ -15,14 +16,16 @@ internal sealed class DeviceWindow : Form
 
     private readonly HeadsetMonitor _monitor;
     private readonly StatusStore _store;
-    private readonly TabControl _tabs = new() { Dock = DockStyle.Fill, Padding = new Point(12, 4) };
+    private readonly ButtonsPage _buttonsPage;
+    private readonly ThemedTabs _tabs = new() { Dock = DockStyle.Fill };
     private readonly ListView _deviceList = CreateList(("Property", 170), ("Value", 420));
     private readonly ListView _historyList = CreateList(("Time", 70), ("Event", 150), ("Battery", 65), ("Charging", 70), ("Headset", 60), ("Mic", 55), ("Volume", 60), ("Raw report", 190));
 
-    public DeviceWindow(HeadsetMonitor monitor, StatusStore store)
+    public DeviceWindow(HeadsetMonitor monitor, StatusStore store, ButtonActionSettings buttonActions)
     {
         _monitor = monitor;
         _store = store;
+        _buttonsPage = new ButtonsPage(buttonActions, LogicalToDeviceUnits);
 
         Text = "Headset Stats";
         Icon = BatteryIcon.Create(TrayIconKind.App, null, 32);
@@ -32,17 +35,19 @@ internal sealed class DeviceWindow : Form
         ClientSize = new Size(LogicalToDeviceUnits(760), LogicalToDeviceUnits(540));
         MinimumSize = new Size(LogicalToDeviceUnits(560), LogicalToDeviceUnits(400));
 
-        _tabs.TabPages.Add(Page("Device", _deviceList,
+        _tabs.Add("Device", Page(_deviceList,
             "Live information about the connected headset. Values update when the headset reports a change."));
-        _tabs.TabPages.Add(Page("History", _historyList,
+        _tabs.Add("History", Page(_historyList,
             "Status reports received since the app started, newest first. The raw bytes are what the adapter sent."));
-        _tabs.TabPages.Add(SupportedDevicesPage());
-        _tabs.TabPages.Add(AboutPage());
+        _tabs.Add("Buttons", _buttonsPage);
+        _tabs.Add("Supported devices", SupportedDevicesPage());
+        _tabs.Add("About", AboutPage());
         Controls.Add(_tabs);
 
         ScaleColumns(_deviceList);
         ScaleColumns(_historyList);
         _deviceList.Resize += (_, _) => FillLastColumn(_deviceList);
+        _deviceList.VisibleChanged += (_, _) => FillLastColumn(_deviceList); // pages start hidden, so size is only final once shown
         RefreshData();
     }
 
@@ -61,12 +66,15 @@ internal sealed class DeviceWindow : Form
 
     public void ShowTab(DeviceWindowTab tab) => _tabs.SelectedIndex = (int)tab;
 
+    public void ShowButtonResult(HeadsetButton button, string? error) => _buttonsPage.ShowResult(button, error);
+
     /// <summary>Re-reads the monitor. Call on the UI thread.</summary>
     public void RefreshData()
     {
         if (IsDisposed) return;
         FillDevice();
         FillHistory();
+        _buttonsPage.ShowState(_monitor.LastStatus, _monitor.LastButtonPress);
     }
 
     private void FillDevice()
@@ -146,7 +154,7 @@ internal sealed class DeviceWindow : Form
         _historyList.EndUpdate();
     }
 
-    private TabPage SupportedDevicesPage()
+    private Panel SupportedDevicesPage()
     {
         var list = CreateList(("Headset", 190), ("Model", 85), ("Adapter", 85), ("USB id", 90), ("Shows", 290));
         ScaleColumns(list);
@@ -167,7 +175,7 @@ internal sealed class DeviceWindow : Form
                        "another wireless headset, you can help: the project's page explains how to capture its " +
                        $"reports with the included probe tool.\n{RepositoryUrl}");
 
-        var page = new TabPage("Supported devices") { Padding = new Padding(8) };
+        var page = new Panel { Padding = new Padding(LogicalToDeviceUnits(8)) };
         page.Controls.Add(text.Control);
         page.Controls.Add(new Panel { Dock = DockStyle.Top, Height = LogicalToDeviceUnits(8) });
         text.ScrollToTop();
@@ -175,7 +183,7 @@ internal sealed class DeviceWindow : Form
         return page;
     }
 
-    private TabPage AboutPage()
+    private Panel AboutPage()
     {
         var text = new RichText();
         text.Title("Headset Stats");
@@ -184,7 +192,9 @@ internal sealed class DeviceWindow : Form
         text.Heading("What it does");
         text.Paragraph("Windows doesn't show the battery of headsets that connect through their own USB adapter, " +
                        "because it treats the adapter as a plain sound card. Headset Stats reads the adapter's status " +
-                       "messages and shows the battery level, charging state and power state in the system tray.");
+                       "messages and shows the battery level, charging state and power state in the system tray. " +
+                       "It also shows the headset's mic mute, volume and game/chat balance, and can run an action " +
+                       "of your choice when you press the headset's Chat or Game button (see the Buttons tab).");
 
         text.Heading("How the information is gathered");
         text.Paragraph("Besides its audio connection, the adapter has a small data channel (a USB HID interface) that " +
@@ -226,15 +236,15 @@ internal sealed class DeviceWindow : Form
                        "and PULSE Elite are trademarks of Sony Interactive Entertainment Inc., used here only to identify " +
                        "compatible hardware.");
 
-        var page = new TabPage("About") { Padding = new Padding(8) };
+        var page = new Panel { Padding = new Padding(LogicalToDeviceUnits(8)) };
         page.Controls.Add(text.Control);
         text.ScrollToTop();
         return page;
     }
 
-    private TabPage Page(string title, Control content, string hint)
+    private Panel Page(Control content, string hint)
     {
-        var page = new TabPage(title) { Padding = new Padding(8) };
+        var page = new Panel { Padding = new Padding(LogicalToDeviceUnits(8)) };
         content.Dock = DockStyle.Fill;
         page.Controls.Add(content);
         // Room for two wrapped lines at the current font size.

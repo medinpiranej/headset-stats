@@ -1,10 +1,13 @@
 using HeadsetStats.Core;
+using HeadsetStats.Core.Devices;
 
 namespace HeadsetStats.Tray;
 
 internal sealed class TrayContext : ApplicationContext
 {
     private readonly StatusStore _store = new();
+    private readonly ButtonActionSettings _buttonActions = new();
+    private readonly Dictionary<HeadsetButton, DateTime> _lastActionRun = [];
     private readonly HeadsetMonitor _monitor;
     private readonly NotifyIcon _tray = new();
     private DeviceWindow? _window;
@@ -44,6 +47,7 @@ internal sealed class TrayContext : ApplicationContext
         _tray.Visible = true;
 
         _monitor.Changed += (_, _) => _ui.Post(_ => { Render(); _window?.RefreshData(); }, null);
+        _monitor.ButtonPressed += (_, button) => _ui.Post(_ => OnButtonPressed(button), null);
         _refreshTimer.Tick += (_, _) => { Render(); _window?.RefreshData(); };
         _refreshTimer.Start();
         Render();
@@ -105,11 +109,28 @@ internal sealed class TrayContext : ApplicationContext
         }
     }
 
+    private void OnButtonPressed(HeadsetButton button)
+    {
+        _window?.RefreshData();
+        var action = _buttonActions.Get(button);
+        if (!action.IsConfigured) return;
+
+        // One press = one report, but guard against bursts (e.g. a held button repeating).
+        var now = DateTime.UtcNow;
+        if (_lastActionRun.TryGetValue(button, out var last) && now - last < TimeSpan.FromMilliseconds(500)) return;
+        _lastActionRun[button] = now;
+
+        var error = ButtonActionRunner.Run(action);
+        _window?.ShowButtonResult(button, error);
+        if (error is not null)
+            _tray.ShowBalloonTip(5000, $"{button} button action failed", error, ToolTipIcon.Error);
+    }
+
     private void ShowWindow(DeviceWindowTab tab)
     {
         if (_window is null || _window.IsDisposed)
         {
-            _window = new DeviceWindow(_monitor, _store);
+            _window = new DeviceWindow(_monitor, _store, _buttonActions);
             _window.FormClosed += (_, _) => _window = null;
         }
         _window.ShowTab(tab);

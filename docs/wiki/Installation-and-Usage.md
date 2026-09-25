@@ -35,11 +35,15 @@ Right-click menu: **Device details…**, **Supported devices**, **Start with Win
 
 Double-click the tray icon to open it.
 
-![Device tab](https://raw.githubusercontent.com/medinpiranej/headset-stats/main/docs/screenshots/window-device.png)
+![Device tab](https://raw.githubusercontent.com/medinpiranej/headset-stats/main/docs/screenshots/window-device-light.png)
 
 - **Device**: everything known about the connected headset and adapter, including the raw last report
   and whether the values are live or saved from earlier.
-- **History**: every status report received since the app started, decoded, with its raw bytes.
+- **History**: every status report received since the app started, decoded (event, battery, charging,
+  power, mic, volume), with its raw bytes.
+- **Buttons**: live headset volume, mic and game/chat balance, and what the **Chat** and **Game**
+  buttons do on the PC: nothing extra, open a shortcut/app/file/website (pick from the Start menu or
+  Desktop), or run a command. Use **Test now** to try it. The headset still changes its balance too.
 - **Supported devices**: supported headsets, and what to expect from each.
 - **About**: how the information is gathered, what to expect, privacy and trademarks.
 

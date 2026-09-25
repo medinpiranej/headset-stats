@@ -6,6 +6,8 @@
     <AssemblyName>HeadsetStats</AssemblyName>
     <RootNamespace>HeadsetStats.Tray</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!-- WFO5001: WinForms dark mode (Application.SetColorMode) is experimental in .NET 9; we opt in knowingly. -->
+    <NoWarn>$(NoWarn);WFO5001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

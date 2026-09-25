@@ -33,7 +33,7 @@ dotnet build
 dotnet test
 dotnet run --project src/HeadsetStats.Tray
 dotnet run --project src/HeadsetStats.Tray -- --render-icons ../docs/tray-icons.png
-dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots   # PNG of each window tab, live data
+dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots light|dark   # PNG of each tab, live data
 dotnet run --project src/HeadsetStats.Probe -- list | features 054C:0D5E | listen 054C:0D5E 180 | log 054C:0D5E FILE
 ```
 
@@ -74,6 +74,14 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - The window is built in code, not the designer. Give pixel sizes at 96 DPI through `LogicalToDeviceUnits`
   (the app is PerMonitorV2), and check `--screenshots` output at the owner's display scaling.
 - Save images through a `FileStream`, not `Image.Save(path)`: GDI+ fails on paths over 260 characters.
+- **Dark mode**: the app calls `Application.SetColorMode(System)` (WFO5001 suppressed in the Tray csproj). Use only
+  `SystemColors` for UI colours, never hard-coded light colours. Don't disable TextBoxes (they render light in dark
+  mode), and don't use `TabControl` (not themed; use `ThemedTabs`). Check `--screenshots` in both `light` and `dark`.
+- Screenshots capture the window's DWM frame bounds while it's topmost. Don't use `PrintWindow` (it misrenders
+  native ListViews), and never capture more than the app's own window.
+- **Button actions** (`ButtonActionSettings` in Core, `ButtonActionRunner` + `ButtonsPage` in Tray): Chat/Game only,
+  live presses only (`HeadsetMonitor.ButtonPressed`), debounced 500 ms. "Open" shell-executes the target; "Command"
+  runs `cmd.exe /d /s /c "<command>"` with no window.
 - Tray icon (`BatteryIcon.cs`) is vector-drawn per `TrayIconKind`. After changing it, regenerate
   `docs/tray-icons.png` and check 16 px readability on both dark and light backgrounds.
 - Commits end with the `Co-Authored-By` trailer when Claude authored them.

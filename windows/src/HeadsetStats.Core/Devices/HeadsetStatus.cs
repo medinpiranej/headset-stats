@@ -26,4 +26,7 @@ public sealed record HeadsetStatus(bool IsHeadsetOn, int? BatteryPercent, bool? 
 
     /// <summary>What triggered this report, in plain words (e.g. "Volume up"), if known.</summary>
     public string? Trigger { get; init; }
+
+    /// <summary>The button whose press caused this report, or null when it wasn't a button press.</summary>
+    public HeadsetButton? Button { get; init; }
 }

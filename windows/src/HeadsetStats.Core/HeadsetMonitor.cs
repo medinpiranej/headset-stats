@@ -49,7 +49,13 @@ public sealed class HeadsetMonitor : IDisposable
     /// <summary>True while the battery reading is unreliable because charging just ended (see <see cref="ChargeSettling"/>).</summary>
     public bool IsSettling => _settling.IsSettling(DateTimeOffset.Now);
 
+    /// <summary>The most recent live button press this session, if any.</summary>
+    public (HeadsetButton Button, DateTimeOffset At)? LastButtonPress { get; private set; }
+
     public event EventHandler? Changed;
+
+    /// <summary>A button was pressed on the headset (live reports only, never restored ones). Raised on a thread-pool thread.</summary>
+    public event EventHandler<HeadsetButton>? ButtonPressed;
 
     public HeadsetMonitor(IReadOnlyList<IHeadsetProtocol>? protocols = null, StatusStore? store = null)
     {
@@ -92,6 +98,11 @@ public sealed class HeadsetMonitor : IDisposable
                     }
                     SetState(MonitorState.Reporting, protocol, status);
                     _store?.Save(protocol, status);
+                    if (status.Button is { } button)
+                    {
+                        LastButtonPress = (button, status.ReceivedAt);
+                        ButtonPressed?.Invoke(this, button);
+                    }
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)

@@ -10,6 +10,7 @@ Double-click the tray icon, or right-click → **Device details…**, to open th
 |---|---|
 | Device | Headset and adapter model, connection, power, battery, charging, last update, raw report, USB id, adapter firmware, HID path, saved-status file |
 | History | Every status report received this session, decoded, with its raw bytes |
+| Buttons | Live volume / mic / balance, and actions for the Chat and Game buttons (open a shortcut, app, file or URL, or run a command), stored in `%LOCALAPPDATA%\HeadsetStats\settings.json` |
 | Supported devices | All supported headsets, and what to expect from each |
 | About | How the information is gathered, what to expect, privacy, trademarks |
 
@@ -17,8 +18,12 @@ Regenerate the images after changing the icon or the window:
 
 ```
 dotnet run --project src/HeadsetStats.Tray -- --render-icons ../docs/tray-icons.png
-dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots
+dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots light
+dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots dark
 ```
+
+The app follows Windows' light/dark app setting (`Application.SetColorMode`, experimental in .NET 9).
+The window uses a custom `ThemedTabs` strip because `TabControl` doesn't support dark mode yet.
 
 ## Layout
 
