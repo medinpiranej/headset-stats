@@ -1,4 +1,6 @@
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using HeadsetStats.Core;
 
@@ -25,7 +27,18 @@ internal static class WindowScreenshots
 
     private const int DwmwaExtendedFrameBounds = 9;
 
-    public static void Save(string folder, string suffix)
+    // Captions for store screenshots, per tab.
+    private static readonly Dictionary<DeviceWindowTab, string> StoreCaptions = new()
+    {
+        [DeviceWindowTab.Device] = "Battery, charging, mic and volume at a glance",
+        [DeviceWindowTab.History] = "Every message from the headset, decoded",
+        [DeviceWindowTab.Buttons] = "Make the Chat and Game buttons launch anything",
+        [DeviceWindowTab.SupportedDevices] = "Know exactly what to expect from your headset",
+        [DeviceWindowTab.About] = "Open source, offline, no telemetry",
+    };
+
+    /// <param name="storeSize">If set, each capture is centred on a canvas of this size with a caption (store listings).</param>
+    public static void Save(string folder, string suffix, Size? storeSize = null)
     {
         Directory.CreateDirectory(folder);
 
@@ -56,9 +69,11 @@ internal static class WindowScreenshots
                 var bounds = Rectangle.FromLTRB(r.Left + 1, r.Top + 1, r.Right - 1, r.Bottom - 1);
                 using var bitmap = new Bitmap(bounds.Width, bounds.Height);
                 using (var g = Graphics.FromImage(bitmap)) g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
+                using var output = storeSize is { } canvas ? Compose(bitmap, canvas, StoreCaptions[tab], dark: suffix.Contains("dark")) : null;
                 // Save via a stream: GDI+ file paths are limited to MAX_PATH.
-                using var file = File.Create(Path.Combine(folder, $"window-{tab.ToString().ToLowerInvariant()}{suffix}.png"));
-                bitmap.Save(file, ImageFormat.Png);
+                var prefix = storeSize is null ? "window" : "store";
+                using var file = File.Create(Path.Combine(folder, $"{prefix}-{tab.ToString().ToLowerInvariant()}{suffix}.png"));
+                (output ?? bitmap).Save(file, ImageFormat.Png);
             }
             window.Close();
         };
@@ -71,5 +86,39 @@ internal static class WindowScreenshots
             timer.Start();
         };
         Application.Run(window);
+    }
+
+    /// <summary>Window capture centred on a gradient canvas, with a caption and the app name above it.</summary>
+    private static Bitmap Compose(Bitmap window, Size canvas, string caption, bool dark)
+    {
+        var result = new Bitmap(canvas.Width, canvas.Height, PixelFormat.Format24bppRgb);
+        using var g = Graphics.FromImage(result);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+
+        var top = dark ? Color.FromArgb(0x1E, 0x2A, 0x24) : Color.FromArgb(0xE8, 0xF3, 0xEC);
+        var bottom = dark ? Color.FromArgb(0x10, 0x14, 0x12) : Color.FromArgb(0xFA, 0xFB, 0xFA);
+        using (var gradient = new LinearGradientBrush(new Rectangle(Point.Empty, canvas), top, bottom, 90f))
+            g.FillRectangle(gradient, 0, 0, canvas.Width, canvas.Height);
+
+        var text = dark ? Color.White : Color.FromArgb(0x16, 0x1A, 0x18);
+        var captionHeight = canvas.Height * 0.16f;
+        using (var captionFont = new Font("Segoe UI Semibold", canvas.Height * 0.042f, FontStyle.Regular, GraphicsUnit.Pixel))
+        using (var brush = new SolidBrush(text))
+        using (var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+            g.DrawString(caption, captionFont, brush, new RectangleF(0, 0, canvas.Width, captionHeight), format);
+
+        // Scale the window to fit below the caption, never enlarging it.
+        var area = new RectangleF(canvas.Width * 0.05f, captionHeight, canvas.Width * 0.9f, canvas.Height - captionHeight - canvas.Height * 0.05f);
+        var scale = Math.Min(1f, Math.Min(area.Width / window.Width, area.Height / window.Height));
+        var w = window.Width * scale;
+        var h = window.Height * scale;
+        var x = area.X + (area.Width - w) / 2;
+        var y = area.Y + (area.Height - h) / 2;
+        using (var shadow = new SolidBrush(Color.FromArgb(dark ? 110 : 45, 0, 0, 0)))
+            g.FillRectangle(shadow, x + 10, y + 14, w, h);
+        g.DrawImage(window, x, y, w, h);
+        return result;
     }
 }

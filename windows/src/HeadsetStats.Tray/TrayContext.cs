@@ -27,8 +27,18 @@ internal sealed class TrayContext : ApplicationContext
         _ui = new WindowsFormsSynchronizationContext();
         _monitor = new HeadsetMonitor(store: _store, tryUnsupported: () => _settings.TryUnsupportedDevices);
 
-        _startupItem.Checked = StartupRegistration.IsEnabled;
-        _startupItem.CheckedChanged += (_, _) => StartupRegistration.IsEnabled = _startupItem.Checked;
+        if (StartupRegistration.IsPackaged)
+        {
+            // Store build: Windows owns the startup setting for packaged apps.
+            _startupItem.Text = "Start with Windows…";
+            _startupItem.CheckOnClick = false;
+            _startupItem.Click += (_, _) => StartupRegistration.OpenStartupSettings();
+        }
+        else
+        {
+            _startupItem.Checked = StartupRegistration.IsEnabled;
+            _startupItem.CheckedChanged += (_, _) => StartupRegistration.IsEnabled = _startupItem.Checked;
+        }
 
         var details = new ToolStripMenuItem("Device details…", null, (_, _) => ShowWindow(DeviceWindowTab.Device));
         details.Font = new Font(details.Font, FontStyle.Bold);

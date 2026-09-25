@@ -44,6 +44,7 @@ artifacts\HeadsetStats-<version>-win-x64.zip   the same, zipped (~220 KB)
 | `-Configuration Debug` | Debug build |
 | `-SkipTests` | Skip the unit tests |
 | `-Output <folder>` | Put the package somewhere else |
+| `-Msix` | Also build the Microsoft Store package `HeadsetStats-<version>-<runtime>.msix` (self-contained, ~47 MB). Needs the Windows SDK: `winget install Microsoft.WindowsSDK.10.0.26100` |
 
 Without `-SelfContained`, the PC running the app needs the **.NET 9 Desktop Runtime**
 (`winget install Microsoft.DotNet.DesktopRuntime.9`). If Windows blocks the script, run it once with
@@ -84,8 +85,10 @@ Double-click the tray icon, or right-click → **Device details…**, to open th
 |---|---|
 | `HeadsetStats.exe` | Starts the tray app (one instance at a time) |
 | `HeadsetStats.exe --report report.md` | Writes the same report as "Copy device logs" to a file |
-| `HeadsetStats.exe --render-icons icons.png` | Renders every tray icon state (docs) |
-| `HeadsetStats.exe --screenshots <folder> light\|dark` | Screenshots every window tab with live data (docs, store listing) |
+| `HeadsetStats.exe --render-icons icons.png [all]` | Renders every tray icon state at 32 px (`all`: 16, 24 and 32 px) |
+| `HeadsetStats.exe --screenshots <folder> light\|dark` | Screenshots every window tab with live data (docs, website) |
+| `HeadsetStats.exe --store-screenshots <folder> light\|dark` | The same, on 1920×1080 captioned canvases for the Store listing |
+| `HeadsetStats.exe --render-store-assets <folder>` | Package logos (MSIX) and `app.ico`, generated from the vector icon |
 
 To regenerate the images in `docs/`:
 
@@ -126,7 +129,19 @@ Implement `IHeadsetProtocol` (including its `DeviceDescription`) in `src/Headset
 `SupportedHeadsets.All`, add tests built from captured reports, and document it in `docs/PROTOCOL.md`.
 Until then, owners can already try their headset in experimental mode and send device logs.
 
-## Microsoft Store (planned)
+## Microsoft Store (beta)
 
-Package as MSIX with a full-trust desktop entry point, replace the registry-based "Start with Windows"
-with an MSIX `StartupTask`, and add an Xbox Game Bar widget in the same package.
+| File | Purpose |
+|---|---|
+| `packaging/AppxManifest.xml` | MSIX manifest: full-trust desktop app, Windows 10 1809+, startup task for "Start with Windows" |
+| `packaging/identity.json` | Package identity from Partner Center → Product identity (placeholders until filled in) |
+| `packaging/Assets/` | Package logos, generated with `--render-store-assets` |
+| `../docs/store/LISTING.md` | Listing text, keywords, capability justification and notes for certification |
+| `../docs/store/*.png` | 1920×1080 listing screenshots (`--store-screenshots`) |
+
+Build with `.\build.ps1 -Msix` and upload the `.msix` to Partner Center unsigned (the Store signs it). In the
+Store build, "Start with Windows…" opens *Settings → Apps → Startup*, where Windows manages packaged apps'
+startup tasks. To try the package locally, turn on Developer Mode and register the unpacked layout:
+`Add-AppxPackage -Register ..\artifacts\msix-layout-win-x64\AppxManifest.xml`.
+
+Planned: an Xbox Game Bar widget in the same package.

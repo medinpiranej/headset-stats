@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Builds, tests and packages Headset Stats for Windows.
 
@@ -26,10 +26,18 @@
 .PARAMETER Output
     Where to put the published folder and zip (default: <repo>\artifacts).
 
+.PARAMETER Msix
+    Also build the Microsoft Store package (artifacts\HeadsetStats-<version>-<runtime>.msix): a self-contained
+    publish of the tray app plus packaging\AppxManifest.xml, with the identity from packaging\identity.json.
+    Needs the Windows SDK (winget install Microsoft.WindowsSDK.10.0.26100). Upload the .msix to Partner Center
+    unsigned; the Store signs it.
+
 .EXAMPLE
     .\build.ps1
 .EXAMPLE
     .\build.ps1 -SelfContained -Runtime win-arm64
+.EXAMPLE
+    .\build.ps1 -Msix
 #>
 [CmdletBinding()]
 param(
@@ -37,7 +45,8 @@ param(
     [ValidateSet('win-x64', 'win-arm64')] [string] $Runtime = 'win-x64',
     [switch] $SelfContained,
     [switch] $SkipTests,
-    [string] $Output = ''
+    [string] $Output = '',
+    [switch] $Msix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -97,6 +106,39 @@ $zip = "$publishDir.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $zip
 
+if ($Msix) {
+    $makeappx = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe" -ErrorAction SilentlyContinue |
+        Sort-Object FullName -Descending | Select-Object -First 1
+    if (-not $makeappx) { throw 'makeappx.exe not found. Install the Windows SDK: winget install Microsoft.WindowsSDK.10.0.26100' }
+
+    # Store apps can't rely on a separately installed .NET runtime, so the package is self-contained.
+    $layout = Join-Path $Output "msix-layout-$Runtime"
+    if (Test-Path $layout) { Remove-Item $layout -Recurse -Force }
+    Invoke-Step "Publish tray app for MSIX ($Runtime, self-contained)" {
+        dotnet publish src\HeadsetStats.Tray -c $Configuration -r $Runtime --self-contained true -p:DebugType=none -o $layout
+    }
+    Copy-Item (Join-Path $PSScriptRoot 'packaging\Assets') (Join-Path $layout 'Assets') -Recurse
+
+    $identity = Get-Content (Join-Path $PSScriptRoot 'packaging\identity.json') -Raw | ConvertFrom-Json
+    $architecture = $Runtime.Substring(4)  # win-x64 -> x64, win-arm64 -> arm64
+    $manifest = Get-Content (Join-Path $PSScriptRoot 'packaging\AppxManifest.xml') -Raw
+    $tokens = [ordered]@{
+        '$PublisherDisplayName$' = $identity.PublisherDisplayName  # before $Publisher$, which it contains
+        '$Publisher$'            = $identity.Publisher
+        '$Name$'                 = $identity.Name
+        '$Version$'              = "$version.0"
+        '$Architecture$'         = $architecture
+    }
+    foreach ($token in $tokens.Keys) { $manifest = $manifest.Replace($token, $tokens[$token]) }
+    [IO.File]::WriteAllText((Join-Path $layout 'AppxManifest.xml'), $manifest, (New-Object Text.UTF8Encoding $false))
+
+    $msixPath = Join-Path $Output "HeadsetStats-$version-$Runtime.msix"
+    Invoke-Step 'Pack MSIX' { & $makeappx.FullName pack /d $layout /p $msixPath /o }
+    if ($identity.Name -like '*LocalTest*') {
+        Write-Warning 'packaging\identity.json still has the local-test identity; put in the Partner Center values before uploading.'
+    }
+}
+
 $folder = (Resolve-Path $publishDir).Path
 Write-Host ''
 Write-Host "Done. Headset Stats $version ($Runtime)" -ForegroundColor Green
@@ -106,3 +148,7 @@ Write-Host "  Run:    $folder\HeadsetStats.exe"
 if (-not $SelfContained) {
     Write-Host '  Needs the .NET 9 Desktop Runtime on the PC (winget install Microsoft.DotNet.DesktopRuntime.9), or build with -SelfContained.'
 }
+if ($Msix) {
+    Write-Host "  MSIX:   $((Resolve-Path $msixPath).Path)"
+}
+

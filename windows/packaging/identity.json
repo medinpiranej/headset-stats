@@ -1,0 +1,6 @@
+{
+  "_comment": "Partner Center → Headset Stats → Product management → Product identity. Replace the three values below. The placeholders only work for local test packages.",
+  "Name": "HeadsetStats.LocalTest",
+  "Publisher": "CN=HeadsetStats Local Test",
+  "PublisherDisplayName": "Medin Piranej"
+}

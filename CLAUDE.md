@@ -121,6 +121,13 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - Done (Windows): battery/charging/on-off decoding, tray app with state icons, low-battery
   balloon, persisted last status, device details window (Device / History / Supported devices /
   About), probe tool, tests.
+- **Store (MSIX)**: `windows/packaging/` (manifest, identity.json, generated Assets), `build.ps1 -Msix`, listing text in
+  `docs/store/LISTING.md`. The package is self-contained (Store apps can't rely on an installed .NET). In the package,
+  "Start with Windows" is a manifest startup task (`StartupRegistration.IsPackaged` switches the menu to Settings).
+- **Website**: `site/` (static HTML/CSS, light/dark), deployed by `.github/workflows/pages.yml`, which copies images from
+  `docs/` and `windows/packaging/Assets` at build time. Don't duplicate images into `site/`. Keep `site/privacy.html` in
+  sync with `PRIVACY.md` (it's the Store's privacy URL).
+- Images are generated from code: `--render-icons`, `--screenshots`, `--store-screenshots`, `--render-store-assets`.
 - Wiki page sources are in `docs/wiki/`. The GitHub wiki itself isn't created yet (the owner must
   create the first page on github.com); after that, push the pages to `headset-stats.wiki.git`.
 - Next: MSIX packaging for the Microsoft Store (needs Windows SDK + Partner Center identity values;

@@ -5,9 +5,9 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        if (args is ["--render-icons", var output])
+        if (args is ["--render-icons", var output, ..])
         {
-            IconPreview.Save(output);
+            IconPreview.Save(output, allSizes: args.Length > 2 && args[2] == "all");
             return;
         }
 
@@ -25,11 +25,18 @@ internal static class Program
 
         ApplicationConfiguration.Initialize();
 
-        if (args is ["--screenshots", var folder, ..])
+        if (args is ["--render-store-assets", var assetsFolder])
+        {
+            StoreAssets.Save(assetsFolder);
+            return;
+        }
+
+        if (args is [("--screenshots" or "--store-screenshots") and var kind, var folder, ..])
         {
             var mode = args.Length > 2 ? args[2] : "system";
             SetColorMode(mode switch { "dark" => SystemColorMode.Dark, "light" => SystemColorMode.Classic, _ => SystemColorMode.System });
-            WindowScreenshots.Save(folder, mode is "dark" or "light" ? "-" + mode : "");
+            WindowScreenshots.Save(folder, mode is "dark" or "light" ? "-" + mode : "",
+                kind == "--store-screenshots" ? new Size(1920, 1080) : null);
             return;
         }
 
