@@ -41,7 +41,7 @@ B0 02 28 80 EF 58 11 1E
 - [ ] Confirm byte 2 is battery % (compare with the PS5's reading, and watch it drop over time).
 - [ ] Find the charging flag (capture with the charging cable plugged in and unplugged).
 - [ ] Find the "headset off" signal (a report when powering off?).
-- [ ] What does output `B1` bit 0 (usage `0x2C`) do? Status request, or a setting?
+- [ ] What does output `B1` bit 0 (usage `0x2C`) do? `B1 01` is refused by the device (`ERROR_GEN_FAILURE`, via both `HidD_SetOutputReport` and `WriteFile`); maybe it only works in some state, e.g. during pairing.
 - [ ] Which of the 7 declared flag bits in `B0` mean charging / connected / mic muted?
 - [ ] Which retail model(s) use this adapter (Pulse 3D, Pulse Elite / PlayStation Link, …)?
 
