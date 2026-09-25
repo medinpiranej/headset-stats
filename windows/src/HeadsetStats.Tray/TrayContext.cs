@@ -6,8 +6,9 @@ internal sealed class TrayContext : ApplicationContext
 {
     private const int LowBatteryPercent = 15;
 
-    private readonly HeadsetMonitor _monitor = new();
+    private readonly HeadsetMonitor _monitor = new(store: new StatusStore());
     private readonly NotifyIcon _tray = new();
+    private readonly ToolStripMenuItem _modelItem = new() { Enabled = false, Visible = false };
     private readonly ToolStripMenuItem _statusItem = new() { Enabled = false };
     private readonly ToolStripMenuItem _startupItem = new("Start with Windows") { CheckOnClick = true };
     private readonly SynchronizationContext _ui;
@@ -21,6 +22,7 @@ internal sealed class TrayContext : ApplicationContext
         _startupItem.CheckedChanged += (_, _) => StartupRegistration.IsEnabled = _startupItem.Checked;
 
         var menu = new ContextMenuStrip();
+        menu.Items.Add(_modelItem);
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_startupItem);
@@ -48,10 +50,16 @@ internal sealed class TrayContext : ApplicationContext
             _ when status is null => "Waiting for headset… (turn it off and on)",
             _ when !status.IsHeadsetOn => "Headset is off" + (lastKnown is null ? "" : $" · last seen {lastKnown}%"),
             _ when charging => "Charging" + (lastKnown is null ? "" : $" · was {lastKnown}%"),
-            _ => $"Battery {percent}% · updated {status.ReceivedAt:HH:mm}",
+            _ => $"Battery {percent}%",
         };
+        if (status is not null && _monitor.State != MonitorState.NoAdapter)
+            text += _monitor.State == MonitorState.WaitingForHeadset
+                ? $" · as of {FormatTime(status.ReceivedAt)}"
+                : $" · updated {status.ReceivedAt:HH:mm}";
         _statusItem.Text = text;
-        _tray.Text = Truncate("Headset Stats\n" + text, 127);
+        _modelItem.Text = _monitor.ActiveProtocol?.DisplayName ?? "";
+        _modelItem.Visible = _monitor.ActiveProtocol is not null;
+        _tray.Text = Truncate((_monitor.ActiveProtocol?.DisplayName ?? "Headset Stats") + "\n" + text, 127);
 
         var icon = _monitor.State == MonitorState.NoAdapter || status is not { IsHeadsetOn: true }
             ? BatteryIcon.Create(BatteryIconKind.Unknown, null, low: false)
@@ -78,6 +86,9 @@ internal sealed class TrayContext : ApplicationContext
         "Open source (MIT) by Medin Piranej.\nhttps://github.com/medinpiranej/headset-stats\n\n" +
         "Not affiliated with or endorsed by Sony Interactive Entertainment.",
         "About Headset Stats", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+    private static string FormatTime(DateTimeOffset time) =>
+        time.Date == DateTime.Today ? time.ToString("HH:mm") : time.ToString("d MMM HH:mm");
 
     private static string Truncate(string value, int max) => value.Length <= max ? value : value[..max];
 

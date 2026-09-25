@@ -7,7 +7,7 @@ public enum MonitorState
 {
     /// <summary>No supported adapter is plugged in.</summary>
     NoAdapter,
-    /// <summary>Adapter found; no status report received yet.</summary>
+    /// <summary>Adapter found; no live status report yet (LastStatus may be restored from the previous run).</summary>
     WaitingForHeadset,
     /// <summary>At least one status report received from the current adapter.</summary>
     Reporting,
@@ -34,10 +34,13 @@ public sealed class HeadsetMonitor : IDisposable
 
     public event EventHandler? Changed;
 
-    public HeadsetMonitor(IReadOnlyList<IHeadsetProtocol>? protocols = null)
+    public HeadsetMonitor(IReadOnlyList<IHeadsetProtocol>? protocols = null, StatusStore? store = null)
     {
         _protocols = protocols ?? SupportedHeadsets.All;
+        _store = store;
     }
+
+    private readonly StatusStore? _store;
 
     public void Start() => _loop ??= Task.Run(() => RunAsync(_cts.Token));
 
@@ -57,12 +60,15 @@ public sealed class HeadsetMonitor : IDisposable
             try
             {
                 using var connection = HidConnection.Open(collection);
-                SetState(MonitorState.WaitingForHeadset, protocol, null);
+                // Show the last saved status until the adapter sends a fresh one.
+                SetState(MonitorState.WaitingForHeadset, protocol, LastStatus ?? _store?.Load(protocol));
                 while (!ct.IsCancellationRequested)
                 {
                     var report = await connection.ReadInputReportAsync(ct).ConfigureAwait(false);
                     var status = protocol.TryParse(report);
-                    if (status is not null) SetState(MonitorState.Reporting, protocol, status);
+                    if (status is null) continue;
+                    SetState(MonitorState.Reporting, protocol, status);
+                    _store?.Save(protocol, status);
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
