@@ -1,30 +1,86 @@
 # Headset Stats
 
-Shows the battery level of wireless gaming headsets that don't report it to the operating
-system, starting with the PlayStation PULSE 3D wireless headset on Windows.
+See your wireless headset's battery level on your PC, starting with the **PlayStation PULSE 3D**
+wireless headset on Windows.
 
-> **Status: early development.** Battery, charging and on/off are decoded for the PULSE 3D.
-> See [docs/PROTOCOL.md](docs/PROTOCOL.md).
+Windows treats the PULSE 3D's USB adapter as a plain audio device, so it never shows the headset's
+battery. Headset Stats reads the adapter's status messages and puts the level in your system tray.
+
+![Tray icon states](docs/tray-icons.png)
+
+> **Status: early development.** Battery, charging and on/off state work for the PULSE 3D on Windows.
+
+## Features
+
+- **Battery level** in the tray: green above 30 %, amber at 30 % and below, red at 15 % and below
+- **Low-battery notification** at 15 %
+- **Charging indicator** (⚡) and **headset off** state
+- **Remembers the last status** across restarts. The adapter only reports changes, so the app shows
+  the last known state with its time until a new report arrives.
+- Start with Windows (optional)
+- Offline, no telemetry, no third-party dependencies
+
+## Supported devices
+
+| Headset | Adapter (USB id) | Battery | Charging | On/off |
+|---|---|---|---|---|
+| PULSE 3D wireless headset (CFI-ZWH1) | CFI-ZWD1 (`054C:0D5E`) | ✅ 10 % steps | ✅ | ✅ |
+
+Own a headset that isn't listed? See [Adding a headset](#adding-a-headset).
+
+### Known limitations (PULSE 3D)
+
+- The level is reported in **10 % steps** and is a voltage estimate. It can read high for a minute
+  after unplugging the charging cable.
+- **No level is reported while charging**; the app shows ⚡ and the last known level.
+- The adapter sends status **only when something changes** (headset switched on or off, cable plugged
+  or unplugged, adapter plugged in), and the PC can't ask for it. If the icon shows "?", switch the headset off and on.
 
 ## Platforms
 
 | Folder | Platform | Status |
 |---|---|---|
-| [`windows/`](windows/) | Windows 10/11 tray app (.NET 9) | In progress |
-| [`macos/`](macos/) | macOS menu bar app | Planned |
+| [`windows/`](windows/) | Windows 10/11 tray app (.NET 9) | ✅ Working, Microsoft Store release planned |
+| [`macos/`](macos/) | macOS menu bar app (Swift) | Planned |
 | [`linux/`](linux/) | Linux tray app | Planned |
-| [`android/`](android/) | Android app | Planned |
+| [`android/`](android/) | Android app (Kotlin, USB host) | Planned |
 
-All platforms share the protocol documentation in [`docs/`](docs/).
+All platforms share one protocol description: [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
 
-## Supported devices
+## Build (Windows)
 
-| Adapter USB id | Headset | Battery | Charging |
-|---|---|---|---|
-| `054C:0D5E` | PULSE 3D wireless headset (adapter CFI-ZWD1) | Yes (10 % steps) | Yes |
+Requires the [.NET 9 SDK](https://dotnet.microsoft.com/download) (`winget install Microsoft.DotNet.SDK.9`).
 
-Own a headset that isn't listed? Capture a few reports with the probe tool (see
-[docs/PROTOCOL.md](docs/PROTOCOL.md#capturing-samples)) and open an issue.
+```
+cd windows
+dotnet build
+dotnet test
+dotnet run --project src/HeadsetStats.Tray
+```
+
+More in [`windows/README.md`](windows/README.md).
+
+## How it works
+
+The PULSE 3D's USB adapter exposes a vendor-specific HID interface next to its audio interface.
+Whenever the headset's state changes, the adapter sends an 8-byte report `0xB0`. Byte 3 is the
+battery level (or `0x80` while charging) and byte 4 says whether the headset is on. The byte
+layout was worked out by capturing these reports while switching the headset on and off and
+plugging the cable in and out. See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the full layout and raw captures.
+
+## Adding a headset
+
+1. Run the read-only probe while switching your headset on and off and plugging the charging cable in and out:
+   ```
+   cd windows
+   dotnet run --project src/HeadsetStats.Probe -- list
+   dotnet run --project src/HeadsetStats.Probe -- listen <VID>:<PID> 300
+   ```
+2. Open an issue with the output, your headset model, and what you did at each timestamp.
+3. Or implement it yourself: add an `IHeadsetProtocol`, tests with your captured reports, and a
+   section in `docs/PROTOCOL.md`.
+
+More detail is in the [wiki](https://github.com/medinpiranej/headset-stats/wiki).
 
 ## Privacy
 

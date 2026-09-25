@@ -18,8 +18,12 @@ top-level collections:
 ### Status report `0xB0` (COL04, 8 bytes, input)
 
 Sent by the adapter without being asked whenever something changes: the headset powers on
-or off, the charging cable is plugged in or pulled out, or the battery estimate changes.
-It isn't sent on a timer, and the PC can't request it (see output report `0xB1` below).
+or off, the charging cable is plugged in or pulled out, the battery estimate changes, or the
+adapter is plugged into the PC while the headset is on.
+
+It is **not** sent on a timer: nothing arrived during ~10 minutes of charging. The PC also
+can't ask for it (see [Requesting status](#requesting-status)). Apps must therefore keep the
+last report they saw; the Windows app saves it to `%LOCALAPPDATA%\HeadsetStats\last-status.json`.
 
 ```
 B0 02 28 28 EF 58 11 28
@@ -58,19 +62,37 @@ read 60 %, fell to 50 % within 15 s, then 40 % after a power cycle.
 05:31.1  B0 02 28 28 EF 58 11 28
 07:20.4  B0 02 28 80 EF 58 11 28   cable plugged in → charging
 ```
+
 ### Report descriptor (COL04)
 
 - Input `0xB0` declares 7 one-bit buttons, usages `0xFF01:0x25`–`0x2B`. The battery byte is
   **not** declared; it sits in undeclared/constant bits.
 - Output `0xB1` declares a single one-bit button, usage `0xFF01:0x2C`. It's the only output
-  report on this collection. `B0 00` is rejected (`ERROR_INVALID_PARAMETER`).
+  report on this collection.
+
+### Requesting status
+
+Everything tried failed; no state changed on the headset afterwards.
+
+| Attempt | Result |
+|---|---|
+| `HidD_GetInputReport` for `0xB0` (GET_REPORT) | `ERROR_GEN_FAILURE` (31): the device stalls |
+| Output `B0 00` | `ERROR_INVALID_PARAMETER` (87): not a declared output report |
+| Output `B1 01` via `HidD_SetOutputReport` and `WriteFile` | `ERROR_GEN_FAILURE` (31) |
+
+### Identification
+
+The adapter has no USB serial number. The hardware id is `USB\VID_054C&PID_0D5E&REV_0100`
+(adapter firmware 1.00). The USB product string is "Wireless Headset", and the audio function is
+"Wireless Stereo Headset". Headset colour and headset firmware version aren't exposed.
 
 ### Open questions
 
 - [x] Battery is byte 3 (steps of 10). Byte 2 is constant 0x28.
 - [x] Charging: byte 3 = 0x80. No level is reported while charging.
 - [x] Headset off: byte 4 bit 0x04 clear (0xEB, then 0xE3).
-- [ ] What does output `B1` bit 0 (usage `0x2C`) do? `B1 01` is refused by the device (`ERROR_GEN_FAILURE`, via both `HidD_SetOutputReport` and `WriteFile`); maybe it only works in some state, e.g. during pairing.
+- [ ] What does output `B1` bit 0 (usage `0x2C`) do? The device refuses `B1 01`; maybe it only works in some state, e.g. during pairing.
+- [ ] How do the battery values map to the PS5's bars? (40 % showed as 1 bar.)
 - [ ] Which of the 7 declared flag bits in `B0` is mic mute? Is the battery reported while charging anywhere else?
 - [ ] Does the adapter send a new report on its own as the battery drains (e.g. 40 → 30)?
 - [x] Retail model: PULSE 3D wireless headset (CFI-ZWH1) with USB adapter CFI-ZWD1.
