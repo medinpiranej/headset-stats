@@ -26,6 +26,7 @@ public sealed class HeadsetMonitor : IDisposable
     private readonly IReadOnlyList<IHeadsetProtocol> _protocols;
     private readonly StatusStore? _store;
     private readonly List<HeadsetStatus> _history = [];
+    private readonly ChargeSettling _settling = new();
     private readonly CancellationTokenSource _cts = new();
     private Task? _loop;
 
@@ -44,6 +45,9 @@ public sealed class HeadsetMonitor : IDisposable
 
     /// <summary>Most recent battery level reported, kept while charging (when the headset doesn't report one).</summary>
     public int? LastKnownBatteryPercent { get; private set; }
+
+    /// <summary>True while the battery reading is unreliable because charging just ended (see <see cref="ChargeSettling"/>).</summary>
+    public bool IsSettling => _settling.IsSettling(DateTimeOffset.Now);
 
     public event EventHandler? Changed;
 
@@ -80,6 +84,7 @@ public sealed class HeadsetMonitor : IDisposable
                     var report = await connection.ReadInputReportAsync(ct).ConfigureAwait(false);
                     var status = protocol.TryParse(report);
                     if (status is null) continue;
+                    _settling.Observe(LastStatus, status);
                     lock (_history)
                     {
                         _history.Add(status);

@@ -43,6 +43,20 @@ public class Pulse3DProtocolTests
         Assert.Equal(expectedOn, status.IsHeadsetOn);
     }
 
+    [Theory]
+    [InlineData((byte)0xEF, (byte)0x58, false)] // on, steady
+    [InlineData((byte)0xEF, (byte)0x59, true)]  // on, linking up
+    [InlineData((byte)0xEF, (byte)0x5A, true)]  // on, link up done
+    [InlineData((byte)0xEB, (byte)0x59, false)] // switching off
+    [InlineData((byte)0xE3, (byte)0x5B, false)] // off
+    public void Detects_link_up_reports(byte state, byte link, bool expected)
+    {
+        var status = _protocol.TryParse([0xB0, 0x02, 0x28, 0x28, state, link, 0x11, 0x28]);
+
+        Assert.NotNull(status);
+        Assert.Equal(expected, status.IsLinkUp);
+    }
+
     [Fact]
     public void Ignores_other_report_ids()
     {

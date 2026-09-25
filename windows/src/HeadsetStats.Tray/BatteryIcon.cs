@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace HeadsetStats.Tray;
 
-internal enum TrayIconKind { NoAdapter, Waiting, HeadsetOff, Charging, Level, App }
+internal enum TrayIconKind { NoAdapter, Waiting, HeadsetOff, Charging, Level, Settling, App }
 
 /// <summary>
 /// Draws the tray icon: a headphones silhouette tinted by state, with the event on top
@@ -63,6 +63,10 @@ internal static class BatteryIcon
 
         switch (kind)
         {
+            case TrayIconKind.Settling when percent is not null:
+                // Grey headphones + neutral number: reading not trustworthy yet (just stopped charging).
+                DrawOutlinedText(g, s, percent.Value.ToString(CultureInfo.InvariantCulture), Color.White);
+                break;
             case TrayIconKind.Level when percent is not null:
                 DrawOutlinedText(g, s, percent.Value.ToString(CultureInfo.InvariantCulture),
                     percent <= LowPercent ? RedText : percent <= WarnPercent ? AmberText : GreenText);

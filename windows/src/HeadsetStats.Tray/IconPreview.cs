@@ -17,6 +17,7 @@ internal static class IconPreview
         ("30%", TrayIconKind.Level, 30),
         ("10%", TrayIconKind.Level, 10),
         ("Charging", TrayIconKind.Charging, null),
+        ("Settling 70%", TrayIconKind.Settling, 70),
         ("Headset off", TrayIconKind.HeadsetOff, null),
         ("Waiting", TrayIconKind.Waiting, null),
         ("No adapter", TrayIconKind.NoAdapter, null),

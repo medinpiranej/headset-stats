@@ -37,8 +37,17 @@ B0 02 28 28 EF 58 11 28
 └── report id
 ```
 
-The battery value comes from a voltage-based estimate: after the cable was pulled out it
-read 60 %, fell to 50 % within 15 s, then 40 % after a power cycle.
+The battery value comes from a voltage-based estimate, and **reads too high right after charging**:
+
+| Session | After the cable was pulled | Later, on a link-up report (byte 5 = `0x59`/`0x5A`) |
+|---|---|---|
+| 1 (short charge) | 60 % → 50 % within 15 s | 40 % after a power cycle |
+| 2 (~35 min charge from 40 %) | **100 %** → 70 % within 33 s | **50 %** after replugging the adapter |
+
+Reports sent while the headset **links up** (switched on, or adapter plugged in) carry a fresh,
+accurate estimate; steady reports (`0x58`) right after charging don't. Apps should treat readings
+as *settling* from the end of charging until the next link-up report. The Windows app uses a
+10-minute cap (`ChargeSettling`) and suggests switching the headset off and on.
 
 #### Capture 2026-09-25 (headset at about 40 %, PS5 showing 1 bar)
 

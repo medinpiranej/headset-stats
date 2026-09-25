@@ -8,4 +8,10 @@ namespace HeadsetStats.Core.Devices;
 public sealed record HeadsetStatus(bool IsHeadsetOn, int? BatteryPercent, bool? IsCharging, byte[] RawReport)
 {
     public DateTimeOffset ReceivedAt { get; init; } = DateTimeOffset.Now;
+
+    /// <summary>
+    /// Sent while the headset is (re)establishing its link, e.g. just switched on or the adapter just plugged in.
+    /// The battery estimate in these reports is freshly measured.
+    /// </summary>
+    public bool IsLinkUp { get; init; }
 }

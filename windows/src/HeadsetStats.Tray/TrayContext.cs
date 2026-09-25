@@ -10,6 +10,9 @@ internal sealed class TrayContext : ApplicationContext
     private DeviceWindow? _window;
     private readonly ToolStripMenuItem _modelItem = new() { Enabled = false, Visible = false };
     private readonly ToolStripMenuItem _statusItem = new() { Enabled = false };
+    private readonly ToolStripMenuItem _hintItem = new("Tip: switch the headset off and on for an accurate reading") { Enabled = false, Visible = false };
+    // Re-renders periodically so time-based states (settling after charging) expire without a new report.
+    private readonly System.Windows.Forms.Timer _refreshTimer = new() { Interval = 30_000 };
     private readonly ToolStripMenuItem _startupItem = new("Start with Windows") { CheckOnClick = true };
     private readonly SynchronizationContext _ui;
     private bool _lowBatteryNotified;
@@ -28,6 +31,7 @@ internal sealed class TrayContext : ApplicationContext
         var menu = new ContextMenuStrip();
         menu.Items.Add(_modelItem);
         menu.Items.Add(_statusItem);
+        menu.Items.Add(_hintItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(details);
         menu.Items.Add("Supported devices", null, (_, _) => ShowWindow(DeviceWindowTab.SupportedDevices));
@@ -40,6 +44,8 @@ internal sealed class TrayContext : ApplicationContext
         _tray.Visible = true;
 
         _monitor.Changed += (_, _) => _ui.Post(_ => { Render(); _window?.RefreshData(); }, null);
+        _refreshTimer.Tick += (_, _) => { Render(); _window?.RefreshData(); };
+        _refreshTimer.Start();
         Render();
         _monitor.Start();
     }
@@ -50,7 +56,8 @@ internal sealed class TrayContext : ApplicationContext
         var charging = status?.IsCharging == true;
         var lastKnown = _monitor.LastKnownBatteryPercent;
         var percent = status is { IsHeadsetOn: true } ? status.BatteryPercent : null;
-        var low = percent is not null && percent <= BatteryIcon.LowPercent && !charging;
+        var settling = percent is not null && !charging && _monitor.IsSettling;
+        var low = percent is not null && percent <= BatteryIcon.LowPercent && !charging && !settling;
 
         var text = _monitor.State switch
         {
@@ -58,8 +65,10 @@ internal sealed class TrayContext : ApplicationContext
             _ when status is null => "Waiting for headset… (turn it off and on)",
             _ when !status.IsHeadsetOn => "Headset is off" + (lastKnown is null ? "" : $" · last seen {lastKnown}%"),
             _ when charging => "Charging" + (lastKnown is null ? "" : $" · was {lastKnown}%"),
+            _ when settling => $"Battery ~{percent}% · settling after charging",
             _ => $"Battery {percent}%",
         };
+        _hintItem.Visible = settling;
         if (status is not null && _monitor.State != MonitorState.NoAdapter)
             text += _monitor.State == MonitorState.WaitingForHeadset
                 ? $" · as of {FormatTime(status.ReceivedAt)}"
@@ -76,6 +85,7 @@ internal sealed class TrayContext : ApplicationContext
             _ when !status.IsHeadsetOn => TrayIconKind.HeadsetOff,
             _ when charging => TrayIconKind.Charging,
             _ when percent is null => TrayIconKind.Waiting,
+            _ when settling => TrayIconKind.Settling,
             _ => TrayIconKind.Level,
         };
         var old = _tray.Icon;
@@ -114,6 +124,7 @@ internal sealed class TrayContext : ApplicationContext
 
     protected override void ExitThreadCore()
     {
+        _refreshTimer.Dispose();
         _tray.Visible = false;
         _window?.Close();
         _monitor.Dispose();

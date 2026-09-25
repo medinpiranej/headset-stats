@@ -53,7 +53,8 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - Reports arrive **only on change** (power on/off, cable in/out, adapter plugged in). There's no
   periodic update and **no way to poll**: GET_REPORT and output reports `B0`/`B1` all fail.
   That's why `StatusStore` persists the last report and the tray shows "as of HH:mm".
-- The battery value is a voltage estimate. It reads high right after unplugging the cable (60 → 50 → 40).
+- The battery value is a voltage estimate. It reads high right after charging (100 → 70, true 50). Reports sent
+  during link-up (byte 5 `0x59`/`0x5A`) are accurate, so `ChargeSettling` marks readings "settling" until one arrives (max 10 min).
 
 ## Conventions
 

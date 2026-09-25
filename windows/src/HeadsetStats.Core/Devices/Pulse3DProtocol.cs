@@ -19,6 +19,11 @@ public sealed class Pulse3DProtocol : IHeadsetProtocol
     private const int StateOffset = 4;
     private const byte StateHeadsetOnBit = 0x04;
 
+    // Byte 5: 0x58 steady; 0x59 then 0x5A while the headset links up (switched on / adapter plugged in).
+    private const int LinkOffset = 5;
+    private const byte LinkUpStart = 0x59;
+    private const byte LinkUpDone = 0x5A;
+
     public string DisplayName => "PULSE 3D wireless headset";
     public ushort VendorId => 0x054C;
     public ushort ProductId => 0x0D5E;
@@ -31,7 +36,7 @@ public sealed class Pulse3DProtocol : IHeadsetProtocol
         Limitations:
         [
             "Battery level comes in 10 % steps and is estimated by the headset from its battery voltage.",
-            "Right after unplugging the charging cable the level reads high for about a minute, then settles.",
+            "Right after unplugging the charging cable the level reads too high (e.g. 100 % that drops to 50 %). Switch the headset off and on to get an accurate reading; the app marks the value as \"settling\" until then.",
             "While charging, the headset reports only \"charging\", with no level.",
             "The adapter sends status only when something changes (headset switched on or off, cable plugged or unplugged, adapter plugged in). The PC can't ask for it, so the shown value may be from earlier.",
             "Volume and mic-mute buttons are handled inside the headset and aren't visible to the PC.",
@@ -45,13 +50,14 @@ public sealed class Pulse3DProtocol : IHeadsetProtocol
         if (report.Length < ReportLength || report[0] != StatusReportId) return null;
 
         var isOn = (report[StateOffset] & StateHeadsetOnBit) != 0;
+        var isLinkUp = isOn && report[LinkOffset] is LinkUpStart or LinkUpDone;
         var battery = report[BatteryOffset];
 
         if (battery == BatteryCharging)
-            return new HeadsetStatus(isOn, BatteryPercent: null, IsCharging: true, report.ToArray());
+            return new HeadsetStatus(isOn, BatteryPercent: null, IsCharging: true, report.ToArray()) { IsLinkUp = isLinkUp };
         if (battery > 100)
             return null;
 
-        return new HeadsetStatus(isOn, battery, IsCharging: false, report.ToArray());
+        return new HeadsetStatus(isOn, battery, IsCharging: false, report.ToArray()) { IsLinkUp = isLinkUp };
     }
 }

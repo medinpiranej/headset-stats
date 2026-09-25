@@ -91,6 +91,8 @@ internal sealed class DeviceWindow : Form
             ("Battery", status switch
             {
                 null => "Unknown",
+                { BatteryPercent: { } p } when _monitor.IsSettling =>
+                    $"~{p} % · settling after charging, reads high. Switch the headset off and on for an accurate reading",
                 { BatteryPercent: { } p } => $"{p} %",
                 { IsCharging: true } => lastKnown is null ? "Not reported while charging" : $"Not reported while charging · last known {lastKnown} %",
                 _ => "Unknown",
@@ -187,7 +189,9 @@ internal sealed class DeviceWindow : Form
                     "has changed since the app started, you'll see the last saved value with its time, or \"?\". " +
                     "Switching the headset off and on always refreshes it.");
         text.Bullet("While charging, the headset reports only that it's charging, not how full it is.");
-        text.Bullet("Right after charging the level can read high for a minute and then settle.");
+        text.Bullet("Right after charging the headset reports too high a level (for example 100 % that is really 50 %). " +
+                    "The app shows the icon in grey and marks the value as settling. Switching the headset off and on " +
+                    "makes it measure again and report the real level.");
         text.Bullet("The PS5 shows a few bars rather than a number, so the two won't always look the same.");
 
         text.Heading("Contributing");
