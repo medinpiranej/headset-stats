@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Authors>Medin Piranej</Authors>
+    <Product>Headset Stats</Product>
+    <Copyright>Copyright (c) 2026 Medin Piranej</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/medinpiranej/headset-stats</RepositoryUrl>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>

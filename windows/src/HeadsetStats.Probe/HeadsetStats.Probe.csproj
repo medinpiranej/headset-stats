@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>headset-probe</AssemblyName>
+    <RootNamespace>HeadsetStats.Probe</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeadsetStats.Core\HeadsetStats.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,29 @@
+# .NET (windows/)
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+*.msix
+*.appx
+AppPackages/
+
+# macOS / Xcode (macos/)
+.DS_Store
+xcuserdata/
+DerivedData/
+
+# Linux (linux/)
+build/
+target/
+
+# Android (android/)
+.gradle/
+local.properties
+*.apk
+*.aab
+.idea/
+android/**/build/
+
+# Editors
+.vscode/
