@@ -4,8 +4,10 @@ namespace HeadsetStats.Tray;
 
 internal sealed class TrayContext : ApplicationContext
 {
-    private readonly HeadsetMonitor _monitor = new(store: new StatusStore());
+    private readonly StatusStore _store = new();
+    private readonly HeadsetMonitor _monitor;
     private readonly NotifyIcon _tray = new();
+    private DeviceWindow? _window;
     private readonly ToolStripMenuItem _modelItem = new() { Enabled = false, Visible = false };
     private readonly ToolStripMenuItem _statusItem = new() { Enabled = false };
     private readonly ToolStripMenuItem _startupItem = new("Start with Windows") { CheckOnClick = true };
@@ -15,21 +17,29 @@ internal sealed class TrayContext : ApplicationContext
     public TrayContext()
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+        _monitor = new HeadsetMonitor(store: _store);
 
         _startupItem.Checked = StartupRegistration.IsEnabled;
         _startupItem.CheckedChanged += (_, _) => StartupRegistration.IsEnabled = _startupItem.Checked;
+
+        var details = new ToolStripMenuItem("Device details…", null, (_, _) => ShowWindow(DeviceWindowTab.Device));
+        details.Font = new Font(details.Font, FontStyle.Bold);
 
         var menu = new ContextMenuStrip();
         menu.Items.Add(_modelItem);
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(details);
+        menu.Items.Add("Supported devices", null, (_, _) => ShowWindow(DeviceWindowTab.SupportedDevices));
         menu.Items.Add(_startupItem);
-        menu.Items.Add("About", null, (_, _) => ShowAbout());
+        menu.Items.Add("About", null, (_, _) => ShowWindow(DeviceWindowTab.About));
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitThread());
         _tray.ContextMenuStrip = menu;
+        _tray.DoubleClick += (_, _) => ShowWindow(DeviceWindowTab.Device);
         _tray.Visible = true;
 
-        _monitor.Changed += (_, _) => _ui.Post(_ => Render(), null);
+        _monitor.Changed += (_, _) => _ui.Post(_ => { Render(); _window?.RefreshData(); }, null);
         Render();
         _monitor.Start();
     }
@@ -83,11 +93,19 @@ internal sealed class TrayContext : ApplicationContext
         }
     }
 
-    private static void ShowAbout() => MessageBox.Show(
-        "Headset Stats — shows the battery level of wireless headsets.\n\n" +
-        "Open source (MIT) by Medin Piranej.\nhttps://github.com/medinpiranej/headset-stats\n\n" +
-        "Not affiliated with or endorsed by Sony Interactive Entertainment.",
-        "About Headset Stats", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    private void ShowWindow(DeviceWindowTab tab)
+    {
+        if (_window is null || _window.IsDisposed)
+        {
+            _window = new DeviceWindow(_monitor, _store);
+            _window.FormClosed += (_, _) => _window = null;
+        }
+        _window.ShowTab(tab);
+        _window.RefreshData();
+        _window.Show();
+        if (_window.WindowState == FormWindowState.Minimized) _window.WindowState = FormWindowState.Normal;
+        _window.Activate();
+    }
 
     private static string FormatTime(DateTimeOffset time) =>
         time.Date == DateTime.Today ? time.ToString("HH:mm") : time.ToString("d MMM HH:mm");
@@ -97,6 +115,7 @@ internal sealed class TrayContext : ApplicationContext
     protected override void ExitThreadCore()
     {
         _tray.Visible = false;
+        _window?.Close();
         _monitor.Dispose();
         _tray.Icon?.Dispose();
         _tray.Dispose();

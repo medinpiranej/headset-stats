@@ -10,6 +10,11 @@ internal static class Program
             IconPreview.Save(output);
             return;
         }
+        if (args is ["--screenshots", var folder])
+        {
+            WindowScreenshots.Save(folder);
+            return;
+        }
 
         using var singleInstance = new Mutex(initiallyOwned: true, @"Local\HeadsetStats.Tray", out var isFirst);
         if (!isFirst) return;

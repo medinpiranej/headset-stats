@@ -4,10 +4,20 @@ Tray app for Windows 10/11 that shows the headset battery next to the clock.
 
 ![Tray icon states at 16, 24 and 32 px on dark and light taskbars](../docs/tray-icons.png)
 
-Regenerate this preview after changing `BatteryIcon.cs`:
+Double-click the tray icon, or right-click → **Device details…**, to open the device window:
+
+| Tab | Shows |
+|---|---|
+| Device | Headset and adapter model, connection, power, battery, charging, last update, raw report, USB id, adapter firmware, HID path, saved-status file |
+| History | Every status report received this session, decoded, with its raw bytes |
+| Supported devices | All supported headsets, and what to expect from each |
+| About | How the information is gathered, what to expect, privacy, trademarks |
+
+Regenerate the images after changing the icon or the window:
 
 ```
 dotnet run --project src/HeadsetStats.Tray -- --render-icons ../docs/tray-icons.png
+dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots
 ```
 
 ## Layout

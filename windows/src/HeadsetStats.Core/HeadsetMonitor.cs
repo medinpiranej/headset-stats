@@ -21,12 +21,25 @@ public sealed class HeadsetMonitor : IDisposable
 {
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(3);
 
+    private const int HistoryLimit = 200;
+
     private readonly IReadOnlyList<IHeadsetProtocol> _protocols;
+    private readonly StatusStore? _store;
+    private readonly List<HeadsetStatus> _history = [];
     private readonly CancellationTokenSource _cts = new();
     private Task? _loop;
 
     public MonitorState State { get; private set; } = MonitorState.NoAdapter;
     public IHeadsetProtocol? ActiveProtocol { get; private set; }
+
+    /// <summary>The HID collection currently being read, or null when no adapter is connected.</summary>
+    public HidDeviceInfo? ActiveDevice { get; private set; }
+
+    /// <summary>Live status reports received since the app started, oldest first.</summary>
+    public IReadOnlyList<HeadsetStatus> History
+    {
+        get { lock (_history) return _history.ToArray(); }
+    }
     public HeadsetStatus? LastStatus { get; private set; }
 
     /// <summary>Most recent battery level reported, kept while charging (when the headset doesn't report one).</summary>
@@ -40,8 +53,6 @@ public sealed class HeadsetMonitor : IDisposable
         _store = store;
     }
 
-    private readonly StatusStore? _store;
-
     public void Start() => _loop ??= Task.Run(() => RunAsync(_cts.Token));
 
     private async Task RunAsync(CancellationToken ct)
@@ -51,6 +62,7 @@ public sealed class HeadsetMonitor : IDisposable
             var match = FindAdapter();
             if (match is null)
             {
+                ActiveDevice = null;
                 SetState(MonitorState.NoAdapter, null, null);
                 await Delay(ct).ConfigureAwait(false);
                 continue;
@@ -60,6 +72,7 @@ public sealed class HeadsetMonitor : IDisposable
             try
             {
                 using var connection = HidConnection.Open(collection);
+                ActiveDevice = collection;
                 // Show the last saved status until the adapter sends a fresh one.
                 SetState(MonitorState.WaitingForHeadset, protocol, LastStatus ?? _store?.Load(protocol));
                 while (!ct.IsCancellationRequested)
@@ -67,6 +80,11 @@ public sealed class HeadsetMonitor : IDisposable
                     var report = await connection.ReadInputReportAsync(ct).ConfigureAwait(false);
                     var status = protocol.TryParse(report);
                     if (status is null) continue;
+                    lock (_history)
+                    {
+                        _history.Add(status);
+                        if (_history.Count > HistoryLimit) _history.RemoveAt(0);
+                    }
                     SetState(MonitorState.Reporting, protocol, status);
                     _store?.Save(protocol, status);
                 }

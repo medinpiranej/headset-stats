@@ -13,6 +13,8 @@ public sealed class StatusStore
 
     private readonly string _path;
 
+    public string FilePath => _path;
+
     public StatusStore(string? path = null)
     {
         _path = path ?? Path.Combine(

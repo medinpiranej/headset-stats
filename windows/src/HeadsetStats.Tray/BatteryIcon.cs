@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace HeadsetStats.Tray;
 
-internal enum TrayIconKind { NoAdapter, Waiting, HeadsetOff, Charging, Level }
+internal enum TrayIconKind { NoAdapter, Waiting, HeadsetOff, Charging, Level, App }
 
 /// <summary>
 /// Draws the tray icon: a headphones silhouette tinted by state, with the event on top
@@ -29,9 +29,9 @@ internal static class BatteryIcon
     [DllImport("user32.dll")]
     private static extern bool DestroyIcon(IntPtr handle);
 
-    public static Icon Create(TrayIconKind kind, int? percent)
+    public static Icon Create(TrayIconKind kind, int? percent, int? size = null)
     {
-        using var bitmap = Render(kind, percent, SystemInformation.SmallIconSize.Width);
+        using var bitmap = Render(kind, percent, size ?? SystemInformation.SmallIconSize.Width);
         var handle = bitmap.GetHicon();
         try
         {
@@ -56,7 +56,7 @@ internal static class BatteryIcon
         var tint = kind switch
         {
             TrayIconKind.Level => percent <= LowPercent ? Red : percent <= WarnPercent ? Amber : Green,
-            TrayIconKind.Charging => Green,
+            TrayIconKind.Charging or TrayIconKind.App => Green,
             _ => Grey,
         };
         DrawHeadphones(g, s, tint);

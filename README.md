@@ -10,6 +10,8 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 
 > **Status: early development.** Battery, charging and on/off state work for the PULSE 3D on Windows.
 
+<img src="docs/screenshots/window-device.png" alt="Device details window" width="560">
+
 ## Features
 
 - **Battery level** in the tray: green above 30 %, amber at 30 % and below, red at 15 % and below
@@ -17,6 +19,9 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 - **Charging indicator** (⚡) and **headset off** state
 - **Remembers the last status** across restarts. The adapter only reports changes, so the app shows
   the last known state with its time until a new report arrives.
+- **Device details window** (double-click the tray icon): live headset and adapter information, a history
+  of every status report with its raw bytes, the list of supported devices, and an About page explaining
+  how the data is gathered and what to expect
 - Start with Windows (optional)
 - Offline, no telemetry, no third-party dependencies
 

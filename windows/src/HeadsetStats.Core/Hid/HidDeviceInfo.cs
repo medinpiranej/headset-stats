@@ -8,6 +8,7 @@ public sealed record HidDeviceInfo(
     string Path,
     ushort VendorId,
     ushort ProductId,
+    ushort VersionNumber,
     ushort UsagePage,
     ushort Usage,
     int InputReportLength,
@@ -53,7 +54,7 @@ public sealed record HidDeviceInfo(
             HidNative.HidD_FreePreparsedData(preparsed);
         }
 
-        return new HidDeviceInfo(path, attributes.VendorId, attributes.ProductId, caps.UsagePage, caps.Usage,
+        return new HidDeviceInfo(path, attributes.VendorId, attributes.ProductId, attributes.VersionNumber, caps.UsagePage, caps.Usage,
             caps.InputReportByteLength, caps.OutputReportByteLength, caps.FeatureReportByteLength, ReadProductName(handle));
     }
 

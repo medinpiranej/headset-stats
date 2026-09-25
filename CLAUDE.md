@@ -15,7 +15,8 @@ docs/            Shared across platforms: PROTOCOL.md (source of truth for devic
                  tray-icons.png, wiki/ (sources for the GitHub wiki)
 windows/         .NET 9 solution (HeadsetStats.sln): the only implemented platform
   src/HeadsetStats.Core     Win32 HID (hid.dll + SetupAPI P/Invoke), protocols, HeadsetMonitor, StatusStore
-  src/HeadsetStats.Tray     WinForms tray app → HeadsetStats.exe
+  src/HeadsetStats.Tray     WinForms tray app → HeadsetStats.exe (tray icon + DeviceWindow with
+                            Device / History / Supported devices / About tabs)
   src/HeadsetStats.Probe    Read-only reverse-engineering CLI → headset-probe.exe
   tests/HeadsetStats.Core.Tests   xUnit; protocol tests use real captured reports
 macos/ linux/ android/      Placeholders (README with suggested stack). Built on the
@@ -32,6 +33,7 @@ dotnet build
 dotnet test
 dotnet run --project src/HeadsetStats.Tray
 dotnet run --project src/HeadsetStats.Tray -- --render-icons ../docs/tray-icons.png
+dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots   # PNG of each window tab, live data
 dotnet run --project src/HeadsetStats.Probe -- list | features 054C:0D5E | listen 054C:0D5E 180
 ```
 
@@ -59,6 +61,15 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - New headset = implement `IHeadsetProtocol`, register it in `SupportedHeadsets.All`, add tests built
   from **real captured reports** (with a comment giving the capture date), and document it in `docs/PROTOCOL.md`.
 - `HeadsetMonitor` raises events on a thread-pool thread; the tray marshals them to the UI thread.
+  It also exposes `ActiveDevice` (adapter USB id, firmware, HID path) and `History` (live reports this session).
+- User-facing text about a headset (model numbers, what it reports, limitations) lives in its protocol's
+  `DeviceDescription`. The Supported devices tab is generated from `SupportedHeadsets.All`, so
+  adding a protocol lists it automatically.
+- The About tab explains how the data is gathered and what to expect. Keep it in sync with
+  `docs/PROTOCOL.md` when findings change.
+- The window is built in code, not the designer. Give pixel sizes at 96 DPI through `LogicalToDeviceUnits`
+  (the app is PerMonitorV2), and check `--screenshots` output at the owner's display scaling.
+- Save images through a `FileStream`, not `Image.Save(path)`: GDI+ fails on paths over 260 characters.
 - Tray icon (`BatteryIcon.cs`) is vector-drawn per `TrayIconKind`. After changing it, regenerate
   `docs/tray-icons.png` and check 16 px readability on both dark and light backgrounds.
 - Commits end with the `Co-Authored-By` trailer when Claude authored them.
@@ -85,7 +96,10 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 ## Status and next steps
 
 - Done (Windows): battery/charging/on-off decoding, tray app with state icons, low-battery
-  balloon, persisted last status, probe tool, tests.
+  balloon, persisted last status, device details window (Device / History / Supported devices /
+  About), probe tool, tests.
+- Wiki page sources are in `docs/wiki/`. The GitHub wiki itself isn't created yet (the owner must
+  create the first page on github.com); after that, push the pages to `headset-stats.wiki.git`.
 - Next: MSIX packaging for the Microsoft Store (needs Windows SDK + Partner Center identity values;
   switch "Start with Windows" from the HKCU Run key to an MSIX `StartupTask`), then more headsets
   (PULSE Elite / PlayStation Link), then the macOS, Linux and Android apps.

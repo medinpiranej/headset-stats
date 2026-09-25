@@ -8,6 +8,7 @@ public interface IHeadsetProtocol
     string DisplayName { get; }
     ushort VendorId { get; }
     ushort ProductId { get; }
+    DeviceDescription Description { get; }
 
     /// <summary>Whether this HID collection is the one that carries status reports.</summary>
     bool IsStatusCollection(HidDeviceInfo collection);

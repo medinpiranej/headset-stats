@@ -29,7 +29,19 @@ Requirements: Windows 10 or 11, and the .NET 9 SDK to build. Plug the headset's 
 Hover the icon, or right-click it, to see the headset model and details such as
 "Battery 40% · updated 14:32", "Charging · was 40%" or "Headset is off · last seen 40%".
 
-Right-click menu: **Start with Windows**, **About**, **Exit**.
+Right-click menu: **Device details…**, **Supported devices**, **Start with Windows**, **About**, **Exit**.
+
+## The device window
+
+Double-click the tray icon to open it.
+
+![Device tab](https://raw.githubusercontent.com/medinpiranej/headset-stats/main/docs/screenshots/window-device.png)
+
+- **Device**: everything known about the connected headset and adapter, including the raw last report
+  and whether the values are live or saved from earlier.
+- **History**: every status report received since the app started, decoded, with its raw bytes.
+- **Supported devices**: supported headsets, and what to expect from each.
+- **About**: how the information is gathered, what to expect, privacy and trademarks.
 
 ## Troubleshooting
 

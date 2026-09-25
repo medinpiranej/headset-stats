@@ -64,6 +64,7 @@ internal static class IconPreview
             }
         }
 
-        sheet.Save(path, ImageFormat.Png);
+        using var file = File.Create(path); // stream, not a file name: GDI+ paths are limited to MAX_PATH
+        sheet.Save(file, ImageFormat.Png);
     }
 }
