@@ -17,25 +17,43 @@ top-level collections:
 
 ### Status report `0xB0` (COL04, 8 bytes, input)
 
-Sent by the adapter without being asked whenever something changes: the headset powers on
-or off, the charging cable is plugged in or pulled out, the battery estimate changes, or the
-adapter is plugged into the PC while the headset is on.
+Sent by the adapter without being asked whenever something changes: a button is pressed (volume,
+mute, game, chat), the headset powers on or off, the charging cable is plugged in or pulled out,
+the battery estimate changes, or the adapter is plugged into the PC while the headset is on.
+While a volume button is held at its limit, the report repeats every ~0.3 s.
 
 It is **not** sent on a timer: nothing arrived during ~10 minutes of charging. The PC also
 can't ask for it (see [Requesting status](#requesting-status)). Apps must therefore keep the
 last report they saw; the Windows app saves it to `%LOCALAPPDATA%\HeadsetStats\last-status.json`.
 
 ```
-B0 02 28 28 EF 58 11 28
-│  │  │  │  │  │  │  └── unknown (0x1E or 0x28 seen)
+B0 05 28 32 EF 11 11 64
+│  │  │  │  │  │  │  └── headset volume 0–100, steps of 10
 │  │  │  │  │  │  └── constant 0x11
-│  │  │  │  │  └── link sub-state: 0x58 steady; 0x59/0x5A/0x5B during power on/off
-│  │  │  │  └── headset state: bit 0x04 set = on (0xEF); 0xEB switching off, 0xE3 off
+│  │  │  │  │  └── event that triggered the report (table below)
+│  │  │  │  └── flags: 0x04 = headset on, 0x02 = mic live (clear = muted);
+│  │  │  │      seen EF on, ED on + muted, EB switching off, E3 off
 │  │  │  └── battery: 0–100 in steps of 10, or 0x80 = charging (no level reported)
-│  │  └── constant 0x28 in every capture
-│  └── constant 0x02
+│  │  └── game/chat balance: 0x28 (40) = centred, −10 per Chat press, +10 per Game press
+│  └── coarse volume level (2 at 30–40 %, 3 at 50–70 %, 4 at 80–90 %, 5 at 100 %)
 └── report id
 ```
+
+| Byte 5 | Event |
+|---|---|
+| `0x11` | Volume up |
+| `0x12` | Volume down |
+| `0x13` | Game button |
+| `0x14` | Chat button |
+| `0x15` | Mic mute button |
+| `0x58` | Battery / charging update |
+| `0x59` | Power state changing (on or off, see flags) |
+| `0x5A` | Switched on, link established |
+| `0x5B` | Switched off |
+
+Volume, mute and game/chat act **inside the headset**: Windows' playback and microphone
+volume/mute don't change (checked with the Windows audio endpoint API). The **monitor button
+sends nothing** to the PC.
 
 The battery value comes from a voltage-based estimate, and **reads too high right after charging**:
 
@@ -48,6 +66,26 @@ Reports sent while the headset **links up** (switched on, or adapter plugged in)
 accurate estimate; steady reports (`0x58`) right after charging don't. Apps should treat readings
 as *settling* from the end of charging until the next link-up report. The Windows app uses a
 10-minute cap (`ChargeSettling`) and suggests switching the headset off and on.
+
+#### Capture 2026-09-26: buttons (battery 50 %, PS5 showing 2 of 3 bars)
+
+```
+23:59:13  B0 03 28 32 EF 11 11 32   volume up (held) 50 → 100
+23:59:15  B0 05 28 32 EF 11 11 64   … repeats every 0.3 s at max
+00:02:22  B0 04 28 32 EF 12 11 5A   volume down 90
+00:02:24  B0 03 28 32 EF 12 11 46   volume down 70
+00:03:51  B0 05 28 32 ED 15 11 64   mic mute on
+00:04:04  B0 05 28 32 EF 15 11 64   mic mute off
+          (monitor button pressed twice: no report)
+00:06:49  B0 05 1E 32 EF 14 11 64   chat → balance 30
+00:06:54  B0 05 0A 32 EF 14 11 64   chat → balance 10
+00:06:58  B0 05 14 32 EF 13 11 64   game → balance 20
+00:07:03  B0 05 28 32 EF 13 11 64   game → balance 40
+00:07:08  B0 05 28 32 EB 59 11 64   switching off
+00:07:08  B0 05 28 32 E3 5B 11 64   off
+00:07:22  B0 05 28 32 EF 59 11 64   switching on
+00:07:22  B0 05 28 32 EF 5A 11 64   on
+```
 
 #### Capture 2026-09-25 (headset at about 40 %, PS5 showing 1 bar)
 
@@ -97,12 +135,14 @@ The adapter has no USB serial number. The hardware id is `USB\VID_054C&PID_0D5E&
 
 ### Open questions
 
-- [x] Battery is byte 3 (steps of 10). Byte 2 is constant 0x28.
+- [x] Battery is byte 3 (steps of 10).
 - [x] Charging: byte 3 = 0x80. No level is reported while charging.
 - [x] Headset off: byte 4 bit 0x04 clear (0xEB, then 0xE3).
 - [ ] What does output `B1` bit 0 (usage `0x2C`) do? The device refuses `B1 01`; maybe it only works in some state, e.g. during pairing.
-- [ ] How do the battery values map to the PS5's bars? (40 % showed as 1 bar.)
-- [ ] Which of the 7 declared flag bits in `B0` is mic mute? Is the battery reported while charging anywhere else?
+- [ ] How do the battery values map to the PS5's 3 bars? So far: 40 % = 1 bar, 50 % = 2 bars.
+- [x] Mic mute = byte 4 bit 0x02 (clear = muted); volume = byte 7; game/chat balance = byte 2; byte 5 = event code.
+- [ ] Is the battery level reported while charging anywhere? (Not in report 0xB0.)
+- [ ] Full range of the game/chat balance (seen 10–40; presumably 0–80).
 - [ ] Does the adapter send a new report on its own as the battery drains (e.g. 40 → 30)?
 - [x] Retail model: PULSE 3D wireless headset (CFI-ZWH1) with USB adapter CFI-ZWD1.
 

@@ -68,6 +68,8 @@ internal sealed class TrayContext : ApplicationContext
             _ when settling => $"Battery ~{percent}% · settling after charging",
             _ => $"Battery {percent}%",
         };
+        var micMuted = status is { IsHeadsetOn: true, IsMicMuted: true } && _monitor.State != MonitorState.NoAdapter;
+        if (micMuted) text += " · mic muted";
         _hintItem.Visible = settling;
         if (status is not null && _monitor.State != MonitorState.NoAdapter)
             text += _monitor.State == MonitorState.WaitingForHeadset
@@ -89,7 +91,7 @@ internal sealed class TrayContext : ApplicationContext
             _ => TrayIconKind.Level,
         };
         var old = _tray.Icon;
-        _tray.Icon = BatteryIcon.Create(kind, percent);
+        _tray.Icon = BatteryIcon.Create(kind, percent, micMuted: micMuted);
         old?.Dispose();
 
         if (low && !_lowBatteryNotified)

@@ -17,7 +17,7 @@ internal sealed class DeviceWindow : Form
     private readonly StatusStore _store;
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill, Padding = new Point(12, 4) };
     private readonly ListView _deviceList = CreateList(("Property", 170), ("Value", 420));
-    private readonly ListView _historyList = CreateList(("Time", 80), ("Battery", 80), ("Charging", 75), ("Headset", 65), ("Raw report", 210));
+    private readonly ListView _historyList = CreateList(("Time", 70), ("Event", 150), ("Battery", 65), ("Charging", 70), ("Headset", 60), ("Mic", 55), ("Volume", 60), ("Raw report", 190));
 
     public DeviceWindow(HeadsetMonitor monitor, StatusStore store)
     {
@@ -98,6 +98,16 @@ internal sealed class DeviceWindow : Form
                 _ => "Unknown",
             }),
             ("Charging", status?.IsCharging switch { true => "Yes", false => "No", null => "Unknown" }),
+            ("Microphone", status?.IsMicMuted switch { true => "Muted (headset mute button)", false => "Live", null => "Unknown" }),
+            ("Headset volume", status?.VolumePercent is { } v ? $"{v} % (set with the headset's buttons)" : "Unknown"),
+            ("Game/chat balance", status?.GameChatBalance switch
+            {
+                null => "Unknown",
+                0 => "Centred",
+                < 0 and var b => $"{-b} step{(b == -1 ? "" : "s")} toward chat",
+                var b => $"{b} step{(b == 1 ? "" : "s")} toward game",
+            }),
+            ("Last event", status?.Trigger ?? "–"),
             ("Last update", status is null ? "–" : status.ReceivedAt.ToString("f", CultureInfo.CurrentCulture)),
             ("Last raw report", status is null ? "–" : FormatHex(status.RawReport)),
             ("Adapter model", protocol?.Description.AdapterModel ?? "–"),
@@ -124,9 +134,12 @@ internal sealed class DeviceWindow : Form
             _historyList.Items.Add(new ListViewItem(
             [
                 s.ReceivedAt.ToString("HH:mm:ss", CultureInfo.CurrentCulture),
+                s.Trigger ?? "–",
                 s.BatteryPercent is { } p ? $"{p} %" : "–",
                 s.IsCharging switch { true => "Yes", false => "No", null => "?" },
                 s.IsHeadsetOn ? "On" : "Off",
+                s.IsMicMuted switch { true => "Muted", false => "Live", null => "–" },
+                s.VolumePercent is { } v ? $"{v} %" : "–",
                 FormatHex(s.RawReport),
             ]));
         }

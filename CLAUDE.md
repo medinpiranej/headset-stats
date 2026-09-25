@@ -49,7 +49,10 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - Adapter CFI-ZWD1 = USB `054C:0D5E`. Status comes on HID collection **COL04** (usage page `0xFF01`).
 - Input report **`0xB0`**, 8 bytes, e.g. `B0 02 28 28 EF 58 11 28`:
   - **byte 3**: battery 0–100 in steps of 10; **`0x80` = charging** (no level while charging)
-  - **byte 4**: bit `0x04` set = headset on (`0xEF`); `0xEB`/`0xE3` = switching off / off
+  - **byte 4**: flags. `0x04` set = headset on (`0xEF`), `0x02` clear = mic muted (`0xED`)
+  - **byte 2** game/chat balance (40 = centred, ±10 per press), **byte 5** event code (11 vol+, 12 vol−,
+    13 game, 14 chat, 15 mute, 58 battery, 59/5A/5B power), **byte 7** headset volume 0–100
+  - Monitor button: not reported. Volume/mute/balance act inside the headset, not on Windows audio.
 - Reports arrive **only on change** (power on/off, cable in/out, adapter plugged in). There's no
   periodic update and **no way to poll**: GET_REPORT and output reports `B0`/`B1` all fail.
   That's why `StatusStore` persists the last report and the tray shows "as of HH:mm".

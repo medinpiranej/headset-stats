@@ -29,9 +29,9 @@ internal static class BatteryIcon
     [DllImport("user32.dll")]
     private static extern bool DestroyIcon(IntPtr handle);
 
-    public static Icon Create(TrayIconKind kind, int? percent, int? size = null)
+    public static Icon Create(TrayIconKind kind, int? percent, int? size = null, bool micMuted = false)
     {
-        using var bitmap = Render(kind, percent, size ?? SystemInformation.SmallIconSize.Width);
+        using var bitmap = Render(kind, percent, size ?? SystemInformation.SmallIconSize.Width, micMuted);
         var handle = bitmap.GetHicon();
         try
         {
@@ -44,7 +44,7 @@ internal static class BatteryIcon
         }
     }
 
-    public static Bitmap Render(TrayIconKind kind, int? percent, int size)
+    public static Bitmap Render(TrayIconKind kind, int? percent, int size, bool micMuted = false)
     {
         var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
         using var g = Graphics.FromImage(bitmap);
@@ -81,6 +81,7 @@ internal static class BatteryIcon
                 DrawSlash(g, s);
                 break;
         }
+        if (micMuted) DrawMutedBadge(g, s);
         return bitmap;
     }
 
@@ -122,6 +123,19 @@ internal static class BatteryIcon
             new PointF(0.38f, 0.96f), new PointF(0.76f, 0.42f), new PointF(0.54f, 0.42f),
         }.Select(p => new PointF(p.X * s, p.Y * s)).ToArray());
         DrawOutlined(g, s, path, Bolt);
+    }
+
+    /// <summary>Small red disc with a white bar in the top-right corner: the headset mic is muted.</summary>
+    private static void DrawMutedBadge(Graphics g, float s)
+    {
+        var d = s * 0.46f;
+        var r = new RectangleF(s - d, 0, d, d);
+        using var outline = new Pen(Outline, Math.Max(1f, s * 0.07f));
+        using var fill = new SolidBrush(Red);
+        g.FillEllipse(fill, r);
+        g.DrawEllipse(outline, r);
+        using var bar = new Pen(Color.White, Math.Max(1.2f, s * 0.08f)) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+        g.DrawLine(bar, r.Left + d * 0.28f, r.Top + d * 0.5f, r.Right - d * 0.28f, r.Top + d * 0.5f);
     }
 
     private static void DrawSlash(Graphics g, float s)

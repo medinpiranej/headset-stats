@@ -14,4 +14,16 @@ public sealed record HeadsetStatus(bool IsHeadsetOn, int? BatteryPercent, bool? 
     /// The battery estimate in these reports is freshly measured.
     /// </summary>
     public bool IsLinkUp { get; init; }
+
+    /// <summary>Headset's own volume 0–100 (set with its buttons; independent of the Windows volume), if reported.</summary>
+    public int? VolumePercent { get; init; }
+
+    /// <summary>Whether the headset's mic mute is on, if reported.</summary>
+    public bool? IsMicMuted { get; init; }
+
+    /// <summary>Game/chat balance: 0 = centred, negative = toward chat, positive = toward game (in button presses), if reported.</summary>
+    public int? GameChatBalance { get; init; }
+
+    /// <summary>What triggered this report, in plain words (e.g. "Volume up"), if known.</summary>
+    public string? Trigger { get; init; }
 }

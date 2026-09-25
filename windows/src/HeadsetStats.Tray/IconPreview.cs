@@ -1,4 +1,4 @@
-using System.Drawing.Drawing2D;
+﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 namespace HeadsetStats.Tray;
@@ -10,23 +10,24 @@ namespace HeadsetStats.Tray;
 /// </summary>
 internal static class IconPreview
 {
-    private static readonly (string Label, TrayIconKind Kind, int? Percent)[] States =
+    private static readonly (string Label, TrayIconKind Kind, int? Percent, bool Muted)[] States =
     [
-        ("80%", TrayIconKind.Level, 80),
-        ("100%", TrayIconKind.Level, 100),
-        ("30%", TrayIconKind.Level, 30),
-        ("10%", TrayIconKind.Level, 10),
-        ("Charging", TrayIconKind.Charging, null),
-        ("Settling 70%", TrayIconKind.Settling, 70),
-        ("Headset off", TrayIconKind.HeadsetOff, null),
-        ("Waiting", TrayIconKind.Waiting, null),
-        ("No adapter", TrayIconKind.NoAdapter, null),
+        ("80%", TrayIconKind.Level, 80, false),
+        ("100%", TrayIconKind.Level, 100, false),
+        ("30%", TrayIconKind.Level, 30, false),
+        ("10%", TrayIconKind.Level, 10, false),
+        ("Charging", TrayIconKind.Charging, null, false),
+        ("Settling 70%", TrayIconKind.Settling, 70, false),
+        ("50%, mic muted", TrayIconKind.Level, 50, true),
+        ("Headset off", TrayIconKind.HeadsetOff, null, false),
+        ("Waiting", TrayIconKind.Waiting, null, false),
+        ("No adapter", TrayIconKind.NoAdapter, null, false),
     ];
 
     private static readonly int[] Sizes = [16, 24, 32];
     private const int Zoom = 4;
     private const int Pad = 12;
-    private const int LabelWidth = 110;
+    private const int LabelWidth = 130;
 
     public static void Save(string path)
     {
@@ -59,7 +60,7 @@ internal static class IconPreview
             for (var b = 0; b < backgrounds.Length; b++)
             for (var i = 0; i < Sizes.Length; i++)
             {
-                using var icon = BatteryIcon.Render(States[r].Kind, States[r].Percent, Sizes[i]);
+                using var icon = BatteryIcon.Render(States[r].Kind, States[r].Percent, Sizes[i], States[r].Muted);
                 var x = LabelWidth + (b * Sizes.Length + i) * cell + Pad;
                 g.DrawImage(icon, x, y, Sizes[i] * Zoom, Sizes[i] * Zoom);
             }

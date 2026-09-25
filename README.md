@@ -16,7 +16,8 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 
 - **Battery level** in the tray: green above 30 %, amber at 30 % and below, red at 15 % and below
 - **Low-battery notification** at 15 %
-- **Charging indicator** (⚡) and **headset off** state
+- **Charging indicator** (⚡), **headset off** state, and a **mic muted** badge
+- Shows the headset's own **volume** and **game/chat balance** in the device window
 - **Remembers the last status** across restarts. The adapter only reports changes, so the app shows
   the last known state with its time until a new report arrives.
 - **Device details window** (double-click the tray icon): live headset and adapter information, a history

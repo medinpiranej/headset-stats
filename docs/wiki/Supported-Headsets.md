@@ -13,7 +13,7 @@ version, only its own revision (`REV_0100`).
 - The level is a voltage estimate in 10 % steps.
 - No level while charging (the adapter reports "charging" instead).
 - Status arrives only on change: power on/off, cable in/out, adapter plugged in. It can't be polled.
-- Volume and mic-mute buttons are handled inside the headset; the PC sees nothing.
+- Volume, mic mute and game/chat act inside the headset. The app shows their state, but Windows' volume and mic are unaffected. The monitor button isn't reported.
 
 ## Wanted
 
