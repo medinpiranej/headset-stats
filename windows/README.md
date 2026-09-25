@@ -47,6 +47,7 @@ Probe tool:
 dotnet run --project src/HeadsetStats.Probe -- list
 dotnet run --project src/HeadsetStats.Probe -- features 054C:0D5E
 dotnet run --project src/HeadsetStats.Probe -- listen 054C:0D5E 180
+dotnet run --project src/HeadsetStats.Probe -- log 054C:0D5E capture.log   # runs until stopped, survives unplugging
 ```
 
 ## Adding a headset

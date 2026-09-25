@@ -34,7 +34,7 @@ dotnet test
 dotnet run --project src/HeadsetStats.Tray
 dotnet run --project src/HeadsetStats.Tray -- --render-icons ../docs/tray-icons.png
 dotnet run --project src/HeadsetStats.Tray -- --screenshots ../docs/screenshots   # PNG of each window tab, live data
-dotnet run --project src/HeadsetStats.Probe -- list | features 054C:0D5E | listen 054C:0D5E 180
+dotnet run --project src/HeadsetStats.Probe -- list | features 054C:0D5E | listen 054C:0D5E 180 | log 054C:0D5E FILE
 ```
 
 - `TreatWarningsAsErrors` is on (`windows/Directory.Build.props`), so builds must be warning-free.
