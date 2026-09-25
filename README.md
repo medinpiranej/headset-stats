@@ -85,7 +85,11 @@ plugging the cable in and out. See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for th
 3. Or implement it yourself: add an `IHeadsetProtocol`, tests with your captured reports, and a
    section in `docs/PROTOCOL.md`.
 
-More detail is in the [wiki](https://github.com/medinpiranej/headset-stats/wiki).
+## Contributing
+
+**The project is open to contributions!** Headset captures, bug reports, code, docs, and the
+macOS, Linux and Android apps are all welcome, and you don't need to write code to get your
+headset supported. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
 ## Privacy
 

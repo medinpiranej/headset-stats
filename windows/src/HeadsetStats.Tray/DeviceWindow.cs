@@ -190,6 +190,12 @@ internal sealed class DeviceWindow : Form
         text.Bullet("Right after charging the level can read high for a minute and then settle.");
         text.Bullet("The PS5 shows a few bars rather than a number, so the two won't always look the same.");
 
+        text.Heading("Contributing");
+        text.Paragraph("Headset Stats is open source and open to contributions: support for more headsets, bug " +
+                       "reports, code, documentation, and apps for macOS, Linux and Android. You don't need to " +
+                       "write code to help get your headset supported. See CONTRIBUTING.md on the project page.\n" +
+                       $"{RepositoryUrl}");
+
         text.Heading("Privacy");
         text.Paragraph("Headset Stats works entirely offline. It collects no data, has no telemetry and makes no network " +
                        "connections. The only thing it stores is the last status message, in your local app data folder.");
