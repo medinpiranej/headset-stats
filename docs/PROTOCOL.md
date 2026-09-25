@@ -29,12 +29,20 @@ B0 02 28 80 EF 58 11 1E
 └── report id
 ```
 
+### Report descriptor (COL04)
+
+- Input `0xB0` declares 7 one-bit buttons, usages `0xFF01:0x25`–`0x2B`. The battery byte is
+  **not** declared; it sits in undeclared/constant bits.
+- Output `0xB1` declares a single one-bit button, usage `0xFF01:0x2C`. It's the only output
+  report on this collection. `B0 00` is rejected (`ERROR_INVALID_PARAMETER`).
+
 ### Open questions
 
 - [ ] Confirm byte 2 is battery % (compare with the PS5's reading, and watch it drop over time).
 - [ ] Find the charging flag (capture with the charging cable plugged in and unplugged).
 - [ ] Find the "headset off" signal (a report when powering off?).
-- [ ] Can a 2-byte output report on COL04 (e.g. `B0 00`) request status on demand?
+- [ ] What does output `B1` bit 0 (usage `0x2C`) do? Status request, or a setting?
+- [ ] Which of the 7 declared flag bits in `B0` mean charging / connected / mic muted?
 - [ ] Which retail model(s) use this adapter (Pulse 3D, Pulse Elite / PlayStation Link, …)?
 
 ### Capturing samples
