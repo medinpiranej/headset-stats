@@ -11,7 +11,7 @@ battery. Headset Stats reads the adapter's status messages and puts everything i
 **[Sponsor](https://github.com/sponsors/medinpiranej)** ·
 [Contributing](CONTRIBUTING.md) · [Privacy](PRIVACY.md)
 
-> **Status: beta (v0.2.0).** On Windows, the PULSE 3D's battery, charging, on/off, mic mute, volume,
+> **Status: beta (v0.2.1).** On Windows, the PULSE 3D's battery, charging, on/off, mic mute, volume,
 > game/chat balance and button presses all work. Other Sony headsets can be tried experimentally.
 
 <picture>
