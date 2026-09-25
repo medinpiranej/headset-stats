@@ -29,6 +29,9 @@ public sealed class HeadsetMonitor : IDisposable
     public IHeadsetProtocol? ActiveProtocol { get; private set; }
     public HeadsetStatus? LastStatus { get; private set; }
 
+    /// <summary>Most recent battery level reported, kept while charging (when the headset doesn't report one).</summary>
+    public int? LastKnownBatteryPercent { get; private set; }
+
     public event EventHandler? Changed;
 
     public HeadsetMonitor(IReadOnlyList<IHeadsetProtocol>? protocols = null)
@@ -94,6 +97,8 @@ public sealed class HeadsetMonitor : IDisposable
         State = state;
         ActiveProtocol = protocol;
         LastStatus = status;
+        if (status?.BatteryPercent is { } percent) LastKnownBatteryPercent = percent;
+        else if (state == MonitorState.NoAdapter) LastKnownBatteryPercent = null;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 

@@ -37,20 +37,29 @@ internal sealed class TrayContext : ApplicationContext
     private void Render()
     {
         var status = _monitor.LastStatus;
-        var percent = status?.BatteryPercent;
-        var low = percent is not null && percent <= LowBatteryPercent && status!.IsCharging != true;
+        var charging = status?.IsCharging == true;
+        var lastKnown = _monitor.LastKnownBatteryPercent;
+        var percent = status is { IsHeadsetOn: true } ? status.BatteryPercent : null;
+        var low = percent is not null && percent <= LowBatteryPercent && !charging;
 
         var text = _monitor.State switch
         {
             MonitorState.NoAdapter => "No headset adapter found",
             _ when status is null => "Waiting for headset… (turn it off and on)",
-            _ => $"Battery {percent}%" + (status.IsCharging == true ? " (charging)" : "") + $" · updated {status.ReceivedAt:HH:mm}",
+            _ when !status.IsHeadsetOn => "Headset is off" + (lastKnown is null ? "" : $" · last seen {lastKnown}%"),
+            _ when charging => "Charging" + (lastKnown is null ? "" : $" · was {lastKnown}%"),
+            _ => $"Battery {percent}% · updated {status.ReceivedAt:HH:mm}",
         };
         _statusItem.Text = text;
         _tray.Text = Truncate("Headset Stats\n" + text, 127);
 
+        var icon = _monitor.State == MonitorState.NoAdapter || status is not { IsHeadsetOn: true }
+            ? BatteryIcon.Create(BatteryIconKind.Unknown, null, low: false)
+            : charging
+                ? BatteryIcon.Create(BatteryIconKind.Charging, null, low: false)
+                : BatteryIcon.Create(BatteryIconKind.Level, percent, low);
         var old = _tray.Icon;
-        _tray.Icon = BatteryIcon.Create(percent, low);
+        _tray.Icon = icon;
         old?.Dispose();
 
         if (low && !_lowBatteryNotified)

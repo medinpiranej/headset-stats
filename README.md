@@ -3,7 +3,7 @@
 Shows the battery level of wireless gaming headsets that don't report it to the operating
 system, starting with the PlayStation PULSE 3D wireless headset on Windows.
 
-> **Status: early development.** The battery byte is identified but still being confirmed.
+> **Status: early development.** Battery, charging and on/off are decoded for the PULSE 3D.
 > See [docs/PROTOCOL.md](docs/PROTOCOL.md).
 
 ## Platforms
@@ -21,7 +21,7 @@ All platforms share the protocol documentation in [`docs/`](docs/).
 
 | Adapter USB id | Headset | Battery | Charging |
 |---|---|---|---|
-| `054C:0D5E` | PULSE 3D wireless headset (adapter CFI-ZWD1) | Provisional | Not yet |
+| `054C:0D5E` | PULSE 3D wireless headset (adapter CFI-ZWD1) | Yes (10 % steps) | Yes |
 
 Own a headset that isn't listed? Capture a few reports with the probe tool (see
 [docs/PROTOCOL.md](docs/PROTOCOL.md#capturing-samples)) and open an issue.
