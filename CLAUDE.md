@@ -29,6 +29,7 @@ only in platform code, because every platform reimplements the same decoding.
 ## Commands (run from `windows/`)
 
 ```
+.\build.ps1                    # full build + tests + package into ..\artifacts (CI runs this too)
 dotnet build
 dotnet test
 dotnet run --project src/HeadsetStats.Tray

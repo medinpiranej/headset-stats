@@ -1,3 +1,6 @@
+# Build output (windows/build.ps1)
+artifacts/
+
 # .NET (windows/)
 bin/
 obj/

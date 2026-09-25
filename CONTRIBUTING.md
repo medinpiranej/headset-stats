@@ -50,16 +50,18 @@ Requires the .NET 9 SDK.
 
 ```
 cd windows
-dotnet build      # warnings are treated as errors
-dotnet test
+.\build.ps1       # build (warnings are errors), test and package into ..\artifacts
 ```
+
+While iterating, `dotnet build`, `dotnet test` and `dotnet run --project src/HeadsetStats.Tray` are quicker.
+See [windows/README.md](windows/README.md#build-locally) for all options.
 
 Read [`CLAUDE.md`](CLAUDE.md) first. It describes the layout, conventions and pitfalls, and applies
 to human contributors too.
 
 ### Pull request checklist
 
-- [ ] `dotnet build` has no warnings and `dotnet test` passes
+- [ ] `.\build.ps1` succeeds (no warnings, tests pass). CI runs the same script
 - [ ] New protocol code has tests built from **real captured reports** (with the capture date in a comment)
 - [ ] New findings are documented in `docs/PROTOCOL.md`
 - [ ] The tray icon or window changed? Regenerate `docs/tray-icons.png` / `docs/screenshots/`

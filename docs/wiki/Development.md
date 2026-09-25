@@ -15,10 +15,11 @@ Requires the .NET 9 SDK (`winget install Microsoft.DotNet.SDK.9`).
 
 ```
 cd windows
-dotnet build        # warnings are errors
-dotnet test
+.\build.ps1         # build (warnings are errors), test, package into ..\artifacts
 dotnet run --project src/HeadsetStats.Tray
 ```
+
+See [windows/README.md](https://github.com/medinpiranej/headset-stats/blob/main/windows/README.md#build-locally) for options (self-contained, ARM64, …).
 
 | Project | Role |
 |---|---|

@@ -8,7 +8,8 @@ battery. Headset Stats reads the adapter's status messages and puts the level in
 
 ![Tray icon states](docs/tray-icons.png)
 
-> **Status: early development.** Battery, charging and on/off state work for the PULSE 3D on Windows.
+> **Status: early development.** On Windows, the PULSE 3D's battery, charging, on/off, mic mute, volume,
+> game/chat balance and button presses all work. Other Sony headsets can be tried experimentally.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/window-device-dark.png">
@@ -49,11 +50,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md#try-the-app-with-your-headset-no-coding-ne
 
 ### Known limitations (PULSE 3D)
 
-- The level is reported in **10 % steps** and is a voltage estimate. It can read high for a minute
-  after unplugging the charging cable.
+- The level is reported in **10 % steps** and is a voltage estimate.
+- **Right after charging it reads too high** (e.g. 100 % that is really 50 %). The app greys the icon and
+  marks the value "settling" until the headset reconnects. Switch it off and on for an accurate reading.
 - **No level is reported while charging**; the app shows ⚡ and the last known level.
-- The adapter sends status **only when something changes** (headset switched on or off, cable plugged
+- The adapter sends status **only when something changes** (a button, switched on or off, cable plugged
   or unplugged, adapter plugged in), and the PC can't ask for it. If the icon shows "?", switch the headset off and on.
+- Volume, mute and game/chat act **inside the headset**: the app shows them but Windows' volume is unaffected.
+  The **monitor** button isn't reported to the PC.
 
 ## Platforms
 
@@ -66,18 +70,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md#try-the-app-with-your-headset-no-coding-ne
 
 All platforms share one protocol description: [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
 
-## Build (Windows)
+## Install
+
+The Microsoft Store release is coming. Until then, build it yourself (below), or download the zip
+from the latest successful [GitHub Actions run](https://github.com/medinpiranej/headset-stats/actions)
+(*Artifacts* section). Unzip it and run `HeadsetStats.exe`. It needs the .NET 9 Desktop Runtime:
+`winget install Microsoft.DotNet.DesktopRuntime.9`.
+
+## Build locally (Windows)
 
 Requires the [.NET 9 SDK](https://dotnet.microsoft.com/download) (`winget install Microsoft.DotNet.SDK.9`).
 
 ```
-cd windows
-dotnet build
-dotnet test
-dotnet run --project src/HeadsetStats.Tray
+git clone https://github.com/medinpiranej/headset-stats
+cd headset-stats/windows
+.\build.ps1
 ```
 
-More in [`windows/README.md`](windows/README.md).
+`build.ps1` builds, runs the tests and packages the app into `artifacts\` (a folder and a ~220 KB zip).
+Options, quick dev commands and the probe tool are in [`windows/README.md`](windows/README.md#build-locally).
 
 ## How it works
 
