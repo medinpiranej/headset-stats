@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>HeadsetStats</AssemblyName>
+    <RootNamespace>HeadsetStats.Tray</RootNamespace>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!-- Generated from the vector tray icon by HeadsetStats.exe with the render-store-assets option (see windows/README.md). -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- WFO5001: WinForms dark mode (Application.SetColorMode) is experimental in .NET 9; we opt in knowingly. -->
+    <NoWarn>$(NoWarn);WFO5001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeadsetStats.Core\HeadsetStats.Core.csproj" />
+  </ItemGroup>
+
+</Project>

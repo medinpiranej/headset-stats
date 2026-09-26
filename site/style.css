@@ -1,0 +1,148 @@
+/* Headset Stats website. Light and dark follow the visitor's system setting. */
+:root {
+  --bg: #f7faf8;
+  --surface: #ffffff;
+  --surface-2: #eef4f0;
+  --text: #16201b;
+  --muted: #56645c;
+  --border: #d9e3dd;
+  --accent: #2e8b57;
+  --accent-strong: #1f6e43;
+  --accent-soft: #e2f2e8;
+  --amber: #c78a00;
+  --red: #d32f2f;
+  --shadow: 0 10px 30px rgba(20, 40, 30, 0.12);
+  --radius: 14px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1412;
+    --surface: #161d1a;
+    --surface-2: #1c2521;
+    --text: #e8efeb;
+    --muted: #9aaba2;
+    --border: #2a3530;
+    --accent: #52b883;
+    --accent-strong: #7cd6a4;
+    --accent-soft: #1d3228;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent-strong); }
+
+img { max-width: 100%; height: auto; display: block; }
+
+code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-size: 0.92em; }
+
+.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+/* Header */
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.site-header .wrap { display: flex; align-items: center; gap: 24px; min-height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; font-size: 1.1rem; }
+.brand img { width: 30px; height: 30px; }
+.nav { display: flex; gap: 20px; margin-left: auto; flex-wrap: wrap; }
+.nav a { color: var(--muted); text-decoration: none; font-weight: 500; }
+.nav a:hover { color: var(--text); }
+
+/* Buttons */
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px; border-radius: 999px; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+.btn:hover { border-color: var(--accent); color: var(--text); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.btn.sponsor { color: #db3a7a; }
+
+/* Hero */
+.hero { padding: 72px 0 40px; }
+.hero .wrap { display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
+.badge {
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; font-size: 0.85rem;
+}
+h1 { font-size: clamp(2rem, 4.2vw, 3.1rem); line-height: 1.12; margin: 16px 0; letter-spacing: -0.02em; }
+.lead { font-size: 1.15rem; color: var(--muted); margin: 0 0 28px; }
+.hero-shot { border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.note { color: var(--muted); font-size: 0.9rem; margin-top: 14px; }
+
+/* Sections */
+section { padding: 56px 0; }
+section.alt { background: var(--surface-2); border-block: 1px solid var(--border); }
+h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0 0 10px; letter-spacing: -0.01em; }
+.section-lead { color: var(--muted); margin: 0 0 32px; max-width: 70ch; }
+
+.tray { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.tray img { image-rendering: pixelated; margin-inline: auto; }
+
+.grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+.card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.card p { margin: 0; color: var(--muted); }
+.card .icon { font-size: 1.5rem; line-height: 1; margin-bottom: 10px; }
+
+.gallery { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.gallery figure { margin: 0; }
+.gallery img { border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.gallery figcaption { color: var(--muted); margin-top: 10px; font-size: 0.95rem; }
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface-2); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.table-scroll { overflow-x: auto; }
+
+pre {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; overflow-x: auto; line-height: 1.5;
+}
+
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.steps li { counter-increment: step; position: relative; padding: 16px 18px 16px 62px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.steps li::before {
+  content: counter(step); position: absolute; left: 16px; top: 14px;
+  width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff;
+  display: grid; place-items: center; font-weight: 700;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+
+/* Footer */
+.site-footer { padding: 40px 0; color: var(--muted); font-size: 0.92rem; border-top: 1px solid var(--border); }
+.site-footer .wrap { display: grid; gap: 10px; }
+.site-footer nav { display: flex; gap: 18px; flex-wrap: wrap; }
+
+/* Prose pages (privacy) */
+.prose { max-width: 760px; padding: 48px 0 64px; }
+.prose h1 { font-size: 2.2rem; }
+.prose li { margin-bottom: 8px; }
+
+@media (max-width: 860px) {
+  .hero { padding-top: 40px; }
+  .hero .wrap, .two-col { grid-template-columns: 1fr; }
+  .nav { display: none; }
+}

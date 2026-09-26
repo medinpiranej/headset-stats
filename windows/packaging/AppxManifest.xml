@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX manifest for the Microsoft Store build. build.ps1 -Msix fills in the $...$ tokens from
+  packaging/identity.json (values from Partner Center → Product identity) and the version.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity Name="$Name$" Publisher="$Publisher$" Version="$Version$" ProcessorArchitecture="$Architecture$" />
+
+  <Properties>
+    <DisplayName>Headset Stats</DisplayName>
+    <PublisherDisplayName>$PublisherDisplayName$</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <!-- Windows 10 1809 and later, including Windows 11. -->
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="HeadsetStats" Executable="HeadsetStats.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Headset Stats"
+        Description="Battery, charging, mic and button status of wireless headsets in the system tray."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- "Start with Windows": the user switches it in Settings → Apps → Startup. -->
+        <desktop:Extension Category="windows.startupTask" Executable="HeadsetStats.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="HeadsetStatsStartup" Enabled="true" DisplayName="Headset Stats" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Desktop app: reads the headset's USB adapter through the Windows HID API. -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
