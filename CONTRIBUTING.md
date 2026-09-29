@@ -61,7 +61,7 @@ to human contributors too.
 
 ### Pull request checklist
 
-- [ ] `.\build.ps1` succeeds (no warnings, tests pass). CI runs the same script
+- [ ] `.\build.ps1` succeeds (no warnings, tests pass). The Windows workflow runs the same script
 - [ ] New protocol code has tests built from **real captured reports** (with the capture date in a comment)
 - [ ] New findings are documented in `docs/PROTOCOL.md`
 - [ ] The tray icon or window changed? Regenerate `docs/tray-icons.png` / `docs/screenshots/`

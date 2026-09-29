@@ -3,13 +3,71 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Headset Stats: headset battery in your Windows tray</title>
-  <meta name="description" content="Free, open-source Windows tray app that shows your wireless headset's battery, charging, mic mute and button status. Works with the PlayStation PULSE 3D wireless headset.">
-  <meta property="og:title" content="Headset Stats">
-  <meta property="og:description" content="Your wireless headset's battery, charging and mic status in the Windows system tray. Free and open source.">
-  <meta property="og:image" content="img/store-device-dark.png">
+  <title>PS5 PULSE 3D headset battery on PC (Windows) | Headset Stats</title>
+  <meta name="description" content="See the battery level of your PS5 PULSE 3D wireless headset on a Windows PC. Headset Stats is a free, open-source tray app that shows battery, charging, mic mute and button status. Other Sony headsets can be tried experimentally.">
+  <link rel="canonical" href="https://medinpiranej.github.io/headset-stats/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#2e8b57">
+
+  <!-- Link previews (Discord, Reddit, X, Facebook…) need absolute URLs. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Headset Stats">
+  <meta property="og:url" content="https://medinpiranej.github.io/headset-stats/">
+  <meta property="og:title" content="Headset Stats: PULSE 3D headset battery on your Windows PC">
+  <meta property="og:description" content="Free, open-source Windows tray app that shows your PS5 PULSE 3D headset's battery, charging and mic status.">
+  <meta property="og:image" content="https://medinpiranej.github.io/headset-stats/img/store-device-dark.png">
+  <meta property="og:image:width" content="1920">
+  <meta property="og:image:height" content="1080">
+  <meta property="og:image:alt" content="Headset Stats window showing a PULSE 3D headset's battery, charging, microphone and volume">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Headset Stats: PULSE 3D headset battery on your Windows PC">
+  <meta name="twitter:description" content="Free, open-source Windows tray app that shows your PS5 PULSE 3D headset's battery, charging and mic status.">
+  <meta name="twitter:image" content="https://medinpiranej.github.io/headset-stats/img/store-device-dark.png">
+
   <link rel="icon" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/logo.png">
   <link rel="stylesheet" href="style.css">
+
+  <!-- Structured data: lets search engines show the app (free, Windows, rating-free) and the FAQ. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Headset Stats",
+    "description": "Free, open-source Windows tray app that shows the battery level of the PlayStation PULSE 3D wireless headset, plus charging, mic mute and button status. Other Sony headsets can be tried experimentally.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "softwareVersion": "0.2.1",
+    "url": "https://medinpiranej.github.io/headset-stats/",
+    "downloadUrl": "https://apps.microsoft.com/detail/9P8NLJ432R5R",
+    "installUrl": "https://apps.microsoft.com/detail/9P8NLJ432R5R",
+    "image": "https://medinpiranej.github.io/headset-stats/img/logo.png",
+    "screenshot": "https://medinpiranej.github.io/headset-stats/img/store-device-dark.png",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://opensource.org/licenses/MIT",
+    "author": { "@type": "Person", "name": "Medin Piranej", "url": "https://github.com/medinpiranej" },
+    "sameAs": ["https://github.com/medinpiranej/headset-stats", "https://apps.microsoft.com/detail/9P8NLJ432R5R"]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How can I see my PS5 PULSE 3D headset's battery on a PC?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Windows doesn't show it, because it treats the PULSE 3D's USB adapter as a plain sound card. Install Headset Stats (free, from the Microsoft Store), plug in the adapter and switch the headset on: the battery level appears in the system tray next to the clock." } },
+      { "@type": "Question", "name": "Does it show the battery while the PULSE 3D is charging?",
+        "acceptedAnswer": { "@type": "Answer", "text": "While charging, the headset only reports that it is charging, so Headset Stats shows a charging icon and the last known level. Right after unplugging, the level reads too high for a while; the app marks it as settling until it is reliable." } },
+      { "@type": "Question", "name": "Does it work with the PULSE Elite, PULSE Explore or other Sony headsets?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The PULSE 3D is fully supported. For the PULSE Elite and PULSE Explore, Sony's own PlayStation Link PC driver shows the battery on Windows. Other Sony headsets can be tried in Headset Stats' experimental, listen-only mode; use the app's Report a device button to tell us whether yours works." } },
+      { "@type": "Question", "name": "Is Headset Stats free and safe?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is free and open source (MIT), has no account, ads or telemetry, makes no internet connections, and only listens to the headset's adapter without sending it anything." } },
+      { "@type": "Question", "name": "Does it work on Xbox, PS5 or Mac?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Headset Stats is a Windows 10 and 11 app. The PS5 shows the headset battery itself. The PULSE 3D's adapter doesn't work on Xbox. macOS, Linux and Android versions are planned." } }
+    ]
+  }
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -20,6 +78,7 @@
         <a href="#devices">Devices</a>
         <a href="#beta">Beta</a>
         <a href="#contribute">Contribute</a>
+        <a href="#faq">FAQ</a>
         <a href="https://github.com/medinpiranej/headset-stats">GitHub</a>
       </nav>
     </div>
@@ -30,14 +89,15 @@
       <div class="wrap">
         <div>
           <span class="badge">Free beta · Windows 10 &amp; 11</span>
-          <h1>Your headset's battery, right in the Windows tray.</h1>
+          <h1>Your PULSE 3D headset's battery, right in the Windows tray.</h1>
           <p class="lead">
-            Windows treats your headset's USB adapter as a plain sound card and never shows its battery.
-            Headset Stats reads the adapter's status messages and shows battery, charging, mic mute and
-            button presses next to the clock.
+            Plug the PlayStation® PULSE 3D™ headset's USB adapter into your PC and Windows only sees a sound
+            card, never the battery. Headset Stats reads the adapter's status messages and shows the battery level,
+            charging, mic mute and button presses next to the clock.
           </p>
           <div class="buttons">
-            <a class="btn primary" href="#beta">Join the beta</a>
+            <a class="btn primary" href="https://apps.microsoft.com/detail/9P8NLJ432R5R">Get it from the Microsoft Store</a>
+            <a class="btn" href="#beta">Join the beta</a>
             <a class="btn" href="https://github.com/medinpiranej/headset-stats">View on GitHub</a>
             <a class="btn sponsor" href="https://github.com/sponsors/medinpiranej">♥ Sponsor</a>
           </div>
@@ -168,15 +228,15 @@
     <section id="beta">
       <div class="wrap">
         <h2>Join the beta</h2>
-        <p class="section-lead">Headset Stats is on its way to the Microsoft Store as a free beta for Windows 10 (1809+) and Windows 11.</p>
+        <p class="section-lead">Headset Stats is on the Microsoft Store as a free beta for Windows 10 (1809+) and Windows 11.</p>
         <ol class="steps">
-          <li><strong>Install</strong> <a href="https://apps.microsoft.com/detail/9P8NLJ432R5R">Headset Stats from the Microsoft Store</a> (live once Microsoft approves the beta), or run <code>winget install 9P8NLJ432R5R</code>. Updates arrive automatically.</li>
+          <li><strong>Install</strong> <a href="https://apps.microsoft.com/detail/9P8NLJ432R5R">Headset Stats from the Microsoft Store</a>, or run <code>winget install 9P8NLJ432R5R</code>. Updates arrive automatically.</li>
           <li><strong>Use it</strong> with your headset for a few days.</li>
           <li><strong>Tell us how it goes</strong>: <a href="https://github.com/medinpiranej/headset-stats/issues/new/choose">open an issue</a>, and paste the output of <em>Copy device logs</em> from the app.</li>
         </ol>
-        <p class="note">Can't wait? Download the latest build from
-          <a href="https://github.com/medinpiranej/headset-stats/actions">GitHub Actions</a> (Artifacts of the newest run),
-          or <a href="https://github.com/medinpiranej/headset-stats/blob/main/windows/README.md#build-locally">build it yourself</a>.</p>
+        <p class="note">Prefer not to use the Store?
+          <a href="https://github.com/medinpiranej/headset-stats/blob/main/windows/README.md#build-locally">Build it yourself</a>
+          with one command.</p>
       </div>
     </section>
 
@@ -193,6 +253,42 @@
             <div class="icon">🛠️</div><h3>Write code</h3><p>Windows app, protocol decoding, and the planned macOS, Linux and Android apps.</p></a>
           <a class="card" style="text-decoration:none;color:inherit" href="https://github.com/sponsors/medinpiranej">
             <div class="icon">♥</div><h3>Sponsor</h3><p>Headset Stats is free forever. Sponsoring helps keep it going.</p></a>
+        </div>
+      </div>
+    </section>
+    <section id="faq">
+      <div class="wrap">
+        <h2>Frequently asked questions</h2>
+        <div class="faq">
+          <details open>
+            <summary>How can I see my PS5 PULSE 3D headset's battery on a PC?</summary>
+            <p>Windows doesn't show it, because it treats the PULSE 3D's USB adapter as a plain sound card. Install Headset Stats
+            (free, from the <a href="https://apps.microsoft.com/detail/9P8NLJ432R5R">Microsoft Store</a>), plug in the adapter and
+            switch the headset on: the battery level appears in the system tray next to the clock.</p>
+          </details>
+          <details>
+            <summary>Does it show the battery while the PULSE 3D is charging?</summary>
+            <p>While charging, the headset only reports that it is charging, so Headset Stats shows a ⚡ icon and the last known level.
+            Right after unplugging, the level reads too high for a while; the app marks it as "settling" until it is reliable.</p>
+          </details>
+          <details>
+            <summary>Does it work with the PULSE Elite, PULSE Explore or other Sony headsets?</summary>
+            <p>The PULSE 3D is fully supported. For the PULSE Elite and PULSE Explore, Sony's own
+            <a href="https://www.playstation.com/en-us/support/hardware/playstation-link-pc-driver/">PlayStation Link PC driver</a> shows
+            the battery on Windows. Other Sony headsets can be tried in Headset Stats' experimental, listen-only mode: use the app's
+            <em>Report a device on GitHub…</em> button to tell us whether yours works.</p>
+          </details>
+          <details>
+            <summary>Is Headset Stats free and safe?</summary>
+            <p>Yes. It is free and <a href="https://github.com/medinpiranej/headset-stats">open source</a> (MIT), has no account, ads or
+            telemetry, makes no internet connections, and only listens to the headset's adapter without sending it anything.
+            See the <a href="privacy.html">privacy policy</a>.</p>
+          </details>
+          <details>
+            <summary>Does it work on Xbox, PS5 or Mac?</summary>
+            <p>Headset Stats is a Windows 10 and 11 app. The PS5 shows the headset battery itself. The PULSE 3D's adapter doesn't work
+            on Xbox. macOS, Linux and Android versions are planned.</p>
+          </details>
         </div>
       </div>
     </section>

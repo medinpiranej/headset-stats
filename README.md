@@ -1,12 +1,14 @@
 # Headset Stats
 
-See your wireless headset's battery, charging, mic and button status on your PC, starting with the
-**PlayStation PULSE 3D** wireless headset on Windows 10 and 11.
+**Shows the battery level of the PlayStation PULSE 3D wireless headset on Windows 10 and 11**, right in
+the system tray, along with charging, mic mute and button status. Other Sony headsets can be tried in
+an experimental mode, and support for them is added from what owners report.
 
-Windows treats the PULSE 3D's USB adapter as a plain audio device, so it never shows the headset's
-battery. Headset Stats reads the adapter's status messages and puts everything in your system tray.
+When you plug the PULSE 3D's USB adapter into a PC, Windows only sees a sound card and never shows the
+headset's battery. Headset Stats reads the adapter's status messages and puts the battery next to the clock.
 
 **[Website](https://medinpiranej.github.io/headset-stats/)** ·
+**[Get it on the Microsoft Store](https://apps.microsoft.com/detail/9P8NLJ432R5R)** ·
 **[Join the beta](#join-the-beta-microsoft-store)** ·
 **[Sponsor](https://github.com/sponsors/medinpiranej)** ·
 [Contributing](CONTRIBUTING.md) · [Privacy](PRIVACY.md)
@@ -29,20 +31,20 @@ renders every state at 16, 24 and 32 px.
 
 ## Join the beta (Microsoft Store)
 
-Headset Stats is being submitted to the **Microsoft Store as a free beta for Windows 10 (1809+) and
-Windows 11**.
+Headset Stats is **on the Microsoft Store as a free beta** for Windows 10 (1809+) and Windows 11.
 
 1. **Install**: open **[Headset Stats in the Microsoft Store](https://apps.microsoft.com/detail/9P8NLJ432R5R)** and click
-   **Get** (the page goes live once Microsoft approves the beta). Or, from a terminal: `winget install 9P8NLJ432R5R`.
+   **Get**. Or, from a terminal: `winget install 9P8NLJ432R5R`.
    Updates arrive automatically.
 2. **Use it** with your headset for a few days.
 3. **Tell us how it goes**: [open an issue](https://github.com/medinpiranej/headset-stats/issues/new/choose).
    In the app, **Copy device logs** (bottom of the window or the tray menu) gives us everything we need.
    Headsets that aren't supported yet are especially welcome: use *Report a device on GitHub…*.
 
-Can't wait? Download the latest build from [GitHub Actions](https://github.com/medinpiranej/headset-stats/actions)
-(*Artifacts* of the newest run), unzip it and run `HeadsetStats.exe`. The zip needs the .NET 9 Desktop Runtime:
-`winget install Microsoft.DotNet.DesktopRuntime.9`.
+Prefer not to use the Store? [Build it yourself](#build-locally-windows) with one command, or grab the zip from the
+*Artifacts* of a [Windows workflow run](https://github.com/medinpiranej/headset-stats/actions/workflows/windows.yml)
+when one is available. Unzip it and run `HeadsetStats.exe`; the zip needs the .NET 9 Desktop Runtime
+(`winget install Microsoft.DotNet.DesktopRuntime.9`).
 
 ## Features
 
@@ -94,7 +96,7 @@ needs Windows 10 (1809+) or 11.
 
 | Folder | Platform | Status |
 |---|---|---|
-| [`windows/`](windows/) | Windows 10/11 tray app (.NET 9) | ✅ Beta, Microsoft Store submission in progress |
+| [`windows/`](windows/) | Windows 10/11 tray app (.NET 9) | ✅ Beta, [on the Microsoft Store](https://apps.microsoft.com/detail/9P8NLJ432R5R) |
 | [`macos/`](macos/) | macOS menu bar app (Swift) | Planned |
 | [`linux/`](linux/) | Linux tray app | Planned |
 | [`android/`](android/) | Android app (Kotlin, USB host) | Planned |
@@ -110,6 +112,8 @@ git clone https://github.com/medinpiranej/headset-stats
 cd headset-stats/windows
 .\build.ps1
 ```
+
+To just build and start it, run `.\run.ps1` (or double-click `windows\run.cmd`).
 
 `build.ps1` builds, runs the tests and packages the app into `artifacts\` (a folder and a ~220 KB zip).
 `.\build.ps1 -Msix` also builds the Microsoft Store package (needs the Windows SDK). Options, quick dev

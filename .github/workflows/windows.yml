@@ -1,11 +1,14 @@
 name: Windows
 
+# Manual only for now (Actions → Windows → Run workflow). Automatic builds come later: to enable them,
+# add back:
+#   push:
+#     branches: [main]
+#     paths: ["windows/**", "LICENSE", "PRIVACY.md", ".github/workflows/windows.yml"]
+#   pull_request:
+#     paths: ["windows/**", "LICENSE", "PRIVACY.md", ".github/workflows/windows.yml"]
 on:
-  push:
-    branches: [main]
-    paths: ["windows/**", "LICENSE", "PRIVACY.md", ".github/workflows/windows.yml"]
-  pull_request:
-    paths: ["windows/**", "LICENSE", "PRIVACY.md", ".github/workflows/windows.yml"]
+  workflow_dispatch:
 
 permissions:
   contents: read

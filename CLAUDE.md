@@ -2,6 +2,9 @@
 
 Guidance for Claude (and other contributors) working in this repository.
 
+> **Git: Claude never commits, pushes or tags.** The owner reviews, commits and pushes all changes
+> manually. Leave changes in the working tree and summarize what changed so the owner can commit them.
+
 ## What this is
 
 **Headset Stats**: an open-source (MIT, © Medin Piranej) app that shows the battery level of
@@ -29,7 +32,8 @@ only in platform code, because every platform reimplements the same decoding.
 ## Commands (run from `windows/`)
 
 ```
-.\build.ps1                    # full build + tests + package into ..\artifacts (CI runs this too)
+.\run.ps1  (or run.cmd)        # close a running copy, build, start the tray app (-NoBuild, -Configuration Debug)
+.\build.ps1                    # full build + tests + package into ..\artifacts (the Windows workflow runs this too; manual-only for now)
 dotnet build
 dotnet test
 dotnet run --project src/HeadsetStats.Tray
@@ -95,7 +99,8 @@ Full details and raw captures are in `docs/PROTOCOL.md`.
 - All list views use `ListViewCopy` (Ctrl+C, Ctrl+A, right-click Copy / Copy value / Copy all).
 - Tray icon (`BatteryIcon.cs`) is vector-drawn per `TrayIconKind`. After changing it, regenerate
   `docs/tray-icons.png` and check 16 px readability on both dark and light backgrounds.
-- Commits end with the `Co-Authored-By` trailer when Claude authored them.
+- Commits and pushes are done by the owner only (see the note at the top). Claude never runs
+  `git commit`, `git push` or `git tag`, even when a task seems finished.
 
 ## Rules for working with hardware
 
